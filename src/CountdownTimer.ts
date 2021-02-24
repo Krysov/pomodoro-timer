@@ -13,10 +13,20 @@ export default class CountdownTimer {
     private _currentTimeMS : number = 0;
     private _state : TimerState = TimerState.Standby;
     private _intervalSubscription? : Subscription = undefined;
+    private readonly _onTimerUpdatedSubject : Subject<CountdownTimer>;
     private readonly _onTimerFinishSubject : Subject<CountdownTimer>;
 
     constructor() {
+        this._onTimerUpdatedSubject = new Subject<CountdownTimer>();
         this._onTimerFinishSubject = new Subject<CountdownTimer>();
+    }
+
+    onCountdownUpdate() : Observable<CountdownTimer> {
+        return this._onTimerUpdatedSubject.asObservable();
+    }
+    
+    onCountdownFinish() : Observable<CountdownTimer> {
+        return this._onTimerFinishSubject.asObservable();
     }
 
     setInitialTime(milliseconds : number) : void {
@@ -65,14 +75,11 @@ export default class CountdownTimer {
 
         this._currentTimeMS = Math.max(0, 
             this._currentTimeMS - CountdownTimer.TIMER_INTERVAL_MS);
+        this._onTimerUpdatedSubject.next(this);
         
         if(this._currentTimeMS === 0){
             this.pause();
             this._onTimerFinishSubject.next(this);
         }
-    }
-
-    onCountdownFinish() : Observable<CountdownTimer> {
-        return this._onTimerFinishSubject.asObservable();
     }
 }
