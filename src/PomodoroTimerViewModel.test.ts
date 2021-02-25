@@ -125,16 +125,16 @@ describe('PomodoroTimerViewModel', () => {
         store.setStateDurationWork(expectedMinutes * 60000 + expectedSeconds * 1000);
         const model = new PomodoroTimerViewModel(store);
 
-        expect(model.getCurrentTimePartMinutes).toBe(expectedMinutes);
-        expect(model.getCurrentTimePartSeconds).toBe(expectedSeconds);
+        expect(model.getCurrentTimePartMinutes()).toBe(expectedMinutes);
+        expect(model.getCurrentTimePartSeconds()).toBe(expectedSeconds);
         console.log("time output: " + expectedMinutes + " : " + expectedSeconds);
 
         // let 15 seconds pass from 25:00 to 24:45
         await jestHandler.delay(15000);
         expectedMinutes = 24;
         expectedSeconds = 45;
-        expect(model.getCurrentTimePartMinutes).toBe(expectedMinutes);
-        expect(model.getCurrentTimePartSeconds).toBe(expectedSeconds);
+        expect(model.getCurrentTimePartMinutes()).toBe(expectedMinutes);
+        expect(model.getCurrentTimePartSeconds()).toBe(expectedSeconds);
         console.log("time output: " + expectedMinutes + " : " + expectedSeconds);
 
         jestHandler.finishUnitTest();

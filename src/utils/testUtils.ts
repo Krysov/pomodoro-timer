@@ -14,15 +14,15 @@ export default class JestUnitHandler{
     }
 
     beginUnitTest(){
-        if(this._isFakingTime) jest.useFakeTimers;
+        if(this._isFakingTime) jest.useFakeTimers();
     }
 
     finishUnitTest(){
-        if(this._isFakingTime) jest.useRealTimers;
+        if(this._isFakingTime) jest.useRealTimers();
     }
 }
 
-function expectCloseTo(received : number, expected: number, tolerance : number ) : void {
+export function expectCloseTo(received : number, expected: number, tolerance : number ) : void {
     expect(received).toBeLessThanOrEqual(expected + tolerance);
     expect(received).toBeGreaterThanOrEqual(expected - tolerance);
 }
