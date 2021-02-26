@@ -1,15 +1,9 @@
 import React from 'react';
-import { StyleSheet, Text, View, Button, StatusBar } from 'react-native';
+import { StyleSheet, Text, View, Button, StatusBar, ARTStatic, ARTText } from 'react-native';
 import Icon from 'react-native-vector-icons/Entypo';
+import CompletingCircle from './ui/CompletingCircle'
 
-export interface Props {
-  name: string;
-}
-  
-const PomodoroTimerScreenViewController: React.FC<Props> = (props) => {
-    const [_props, setProps] = React.useState(
-    );
-    
+const PomodoroTimerScreenViewController: React.FC = (props) => {
     return (
       <View style={styles.root}>
         <View style={styles.timerContainer}>
@@ -24,7 +18,7 @@ const PomodoroTimerScreenViewController: React.FC<Props> = (props) => {
               <Text style={[styles.timerText, {marginBottom: 15}]}>:</Text>
               <Text style={[styles.timerText, {textAlign:"left", marginLeft:timerTextSpacing}]}>00</Text>
             </View>
-            <View style={[styles.timerButtonContainer, {transform: [{ translateY:-75 }]}]}>
+            <View style={[styles.timerButtonContainer, {transform: [{ translateY:-timerButtonSpacing }]}]}>
               <Icon
                 name='ccw'
                 color='#fff'
@@ -35,7 +29,7 @@ const PomodoroTimerScreenViewController: React.FC<Props> = (props) => {
                 }}
               />
             </View>
-            <View style={[styles.timerButtonContainer, {transform: [{ translateY:75 }]}]}>
+            <View style={[styles.timerButtonContainer, {transform: [{ translateY:timerButtonSpacing }]}]}>
               <Icon
                 name='controller-play'
                 color='#fff'
@@ -47,19 +41,29 @@ const PomodoroTimerScreenViewController: React.FC<Props> = (props) => {
               />
             </View>
         </View>
-        
+        <View style={{position:'absolute'}}>
+          <CompletingCircle
+            completion={0.666}
+            diameter={300}
+            lineColor='#fff'
+            lineWidth={15}
+            strokeCap='round'
+          />
+        </View>
       </View>
     );
   };
 
   const timerTextSpacing = 16;
-  const timerButtonSpacing = 8;
+  const timerButtonSpacing = 75;
   const timerContainerSize = 256;
   const timerButtonSize = 64;
   const styles = StyleSheet.create({
     root: {
       alignItems: 'center',
-      alignSelf: 'center'
+      alignSelf: 'center',
+      backgroundColor: '#333',
+      justifyContent: 'center',
     },
     timerContainer: {
       width: timerContainerSize,
@@ -70,6 +74,8 @@ const PomodoroTimerScreenViewController: React.FC<Props> = (props) => {
       justifyContent: 'center',
       alignItems: 'center',
       alignSelf: 'center',
+      // transform: [{ rotateX: "5deg" }, {perspective:300}],
+      position:'absolute'
     },
     timerText: {
       alignSelf: 'center',
