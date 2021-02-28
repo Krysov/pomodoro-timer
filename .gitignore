@@ -63,5 +63,8 @@ buck-out/
 .expo/*
 web-build/
 
-#VSCode
+# VSCode
 .vscode/
+
+# Detox
+.detoxrc.json
