@@ -1,9 +1,19 @@
 import React from 'react';
-import { StyleSheet, Text, View, Button, StatusBar, ARTStatic, ARTText } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Entypo';
 import CompletingCircle from './ui/CompletingCircle'
+import CountdownTimerInterface from './CountdownTimerInterface';
+import { MinutesSeconds } from './PomodoroTimerViewModel';
+import PomodoroStateChangeInterface from './PomodoroStateChangeInterface';
 
-const PomodoroTimerScreenViewController: React.FC = (props) => {
+export interface Props {
+  countdownTimer: CountdownTimerInterface<MinutesSeconds>;
+  pomodoroState: PomodoroStateChangeInterface;
+}
+  
+const PomodoroTimerScreenViewController: React.FC<Props> = (props) => {
+    const [_props, setProps] = React.useState(
+    );
     return (
       <View style={styles.root}>
         <View style={styles.timerContainer}>
