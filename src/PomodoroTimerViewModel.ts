@@ -1,25 +1,48 @@
 import ProfileStoreInterface from "./ProfileStoreInterface"
 import PomodoroStateChangeInterface, { PomodoroState } from "./PomodoroStateChangeInterface";
-import { Observable, Subject, timer } from "rxjs";
+import { Observable, Subject } from "rxjs";
 import CountdownTimer from "./CountdownTimer";
+import CountdownTimerInterface from "./CountdownTimerInterface";
 
-export default class PomodoroTimerViewModel implements PomodoroStateChangeInterface{
+export class MinutesSeconds{
+    readonly partMinutes : number;
+    readonly partSeconds : number;
+
+    constructor(_minutes : number, _seconds : number){
+        this.partMinutes = _minutes;
+        this.partSeconds = _seconds;
+    }
+}
+
+export default class PomodoroTimerViewModel implements
+    PomodoroStateChangeInterface, CountdownTimerInterface<MinutesSeconds>{
 
     private readonly _timer : CountdownTimer;
     private readonly _store : ProfileStoreInterface;
     private readonly _onPomodoroStateChange : Subject<PomodoroStateChangeInterface>;
+    private readonly _onTimerUpdateSubject : Subject<PomodoroTimerViewModel>;
+    private readonly _onTimerToggleSubject : Subject<PomodoroTimerViewModel>;
+    private readonly _onTimerFinishSubject : Subject<PomodoroTimerViewModel>;
 
     private _state : PomodoroState;
     private _workIterations : number;
-    private _isRunning : boolean = false;
 
     constructor(store : ProfileStoreInterface) {
         this._onPomodoroStateChange = new Subject();
+        this._onTimerUpdateSubject = new Subject();
+        this._onTimerToggleSubject = new Subject();
+        this._onTimerFinishSubject = new Subject();
         this._timer = new CountdownTimer();
+        this._timer.onCountdownUpdate()
+            .subscribe(timer => this._onTimerUpdateSubject.next(this));
+        this._timer.onCountdownToggle()
+            .subscribe(timer => this._onTimerToggleSubject.next(this));
         this._timer.onCountdownFinish()
-            .subscribe(timer => this.gotoNextState());
+            .subscribe(timer => {
+                this.gotoNextState();
+                this._onTimerFinishSubject.next(this);
+            });
         this._store = store;
-
         this._workIterations = 1;
         this._state = PomodoroState.Work;
         this.setupTimerForState(this._state);
@@ -33,37 +56,44 @@ export default class PomodoroTimerViewModel implements PomodoroStateChangeInterf
         return this._onPomodoroStateChange.asObservable();
     }
 
-    getCurrentTimePartSeconds() : number {
-        const milliseconds = this._timer.getCurrentTime();
-        return Math.floor(milliseconds/1000) % 60;
-    }
-
-    getCurrentTimePartMinutes() : number {
-        const milliseconds = this._timer.getCurrentTime();
-        return Math.floor(milliseconds/60000);
-    }
-
-    isRunning() : boolean {
-        return this._isRunning;
-    }
-
-    run(){
-        this._isRunning = true;
-        this._timer.run();
-    }
-
-    pause(){
-        this._isRunning = false;
-        this._timer.pause();
-    }
-
-    reset(){
-        this._isRunning = false;
-        this._timer.reset();
-    }
-
-    skipState(){
+    skipPomodoroState(){
         this.gotoNextState();
+    }
+
+    isTimerRunning() : boolean {
+        return this._timer.isTimerRunning();
+    }
+
+    startTimer(){
+        this._timer.startTimer();
+    }
+
+    pauseTimer(){
+        this._timer.pauseTimer();
+    }
+
+    resetTimer(){
+        this._timer.resetTimer();
+    }
+
+    getCurrentTime(){
+        const milliseconds = this._timer.getCurrentTime();
+        return new MinutesSeconds(
+            Math.floor(milliseconds/60000) % 60,
+            Math.floor(milliseconds/1000) % 60
+        );
+    }
+
+    onCountdownUpdate(): Observable<PomodoroTimerViewModel> {
+        return this._onTimerUpdateSubject;
+    }
+
+    onCountdownToggle(): Observable<PomodoroTimerViewModel> {
+        return this._onTimerToggleSubject;
+    }
+
+    onCountdownFinish(): Observable<PomodoroTimerViewModel> {
+        return this._onTimerFinishSubject;
     }
 
     private gotoNextState(){
@@ -92,7 +122,7 @@ export default class PomodoroTimerViewModel implements PomodoroStateChangeInterf
     }
 
     private setupTimerForState(state : PomodoroState){
-        this._timer.reset();
+        this._timer.resetTimer();
         switch(state){
             case PomodoroState.Work:
                 this._timer.setInitialTime(this._store.getStateDurationWork());

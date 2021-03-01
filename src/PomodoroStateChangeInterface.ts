@@ -9,4 +9,5 @@ export enum PomodoroState {
 export default interface PomodoroStateChangeInterface {
     onPomodoroStateChange() : Observable<PomodoroStateChangeInterface>;
     getPomodoroState() : PomodoroState;
+    skipPomodoroState() : void;
 }
