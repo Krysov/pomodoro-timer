@@ -4,6 +4,7 @@ import { Text } from 'react-native';
 import { View } from 'react-native';
 import { ViewProps } from 'react-native';
 import { TouchableHighlight } from 'react-native-gesture-handler'
+import IconWrapper from "./ui/Icon";
 import CountdownTimerInterface from './CountdownTimerInterface';
 import { MinutesSeconds } from './PomodoroTimerViewModel';
 import PomodoroStateChangeInterface from './PomodoroStateChangeInterface';
@@ -61,7 +62,7 @@ const PomodoroTimerViewController = (props:PomodoroTimerViewProps) => {
           />
         </View>
     </View>
-    <View style={{position:'absolute', alignSelf:'center'}}>
+    {/* <View style={{position:'absolute', alignSelf:'center'}}>
       <CompletingCircle
         completion={0.75}
         diameter={300}
@@ -69,7 +70,7 @@ const PomodoroTimerViewController = (props:PomodoroTimerViewProps) => {
         lineWidth={15}
         strokeCap='round'
       />
-    </View>
+    </View> */}
   </View>
 };
 
@@ -110,6 +111,16 @@ function TimerButton(props:TimerButtonProps){
       alignItems:'center',
       alignSelf:"center",
     }, props.style]}>
+    <IconWrapper
+      name={props.settings.iconImageName}
+      color='#fff'
+      type='entypo'
+      size={timerButtonSize/2}
+      style={{
+        width: timerButtonSize/props.settings.iconFittingFactor,
+        height: timerButtonSize/props.settings.iconFittingFactor,
+      }}
+    />
   </TouchableHighlight>
 }
 

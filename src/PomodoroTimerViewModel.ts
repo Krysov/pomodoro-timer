@@ -5,12 +5,18 @@ import CountdownTimer from "./CountdownTimer";
 import CountdownTimerInterface from "./CountdownTimerInterface";
 
 export class MinutesSeconds{
-    readonly partMinutes : number;
-    readonly partSeconds : number;
+    readonly partMinutes : string;
+    readonly partSeconds : string;
 
     constructor(_minutes : number, _seconds : number){
-        this.partMinutes = _minutes;
-        this.partSeconds = _seconds;
+        this.partMinutes = this.numberToLeadingZeroesString(_minutes, 2);
+        this.partSeconds = this.numberToLeadingZeroesString(_seconds, 2);
+    }
+
+    private numberToLeadingZeroesString(n: number, size: number): string {
+        var num = n.toString();
+        while (num.length < size) num = "0" + num;
+        return num;
     }
 }
 
