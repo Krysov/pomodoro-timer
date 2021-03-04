@@ -10,29 +10,11 @@ import PomodoroStateChangeInterface, { PomodoroState } from './PomodoroStateChan
 import { TouchableHighlight } from "react-native-gesture-handler";
 
 
-type TestingQueryResults = ReactTestInstance|Array<ReactTestInstance>|null;
-function findAnyByProps(node: ReactTestInstance, props: {[propName: string]: any}): TestingQueryResults{
-    const result = node.findAllByProps(props);
-    if(result.length == 0) return null;
-    if(result.length == 1) return result[0];
-    return result;
-}
-function findAnyByName(node: ReactTestInstance, name: string): TestingQueryResults{
-    return findAnyByProps(node, {'name': name});
-}
-function findAnyByTestID(node: ReactTestInstance, testID: string): TestingQueryResults{
-    return findAnyByProps(node, {'testID': testID});
-}
-function isObject(subject:any){
-    if(Array.isArray(subject)) return false;
-    return subject !== null;
-}
-
 describe('PomodoroTimerView', () => {
 
     afterEach(() => cleanup())
 
-    it('test run toggle reset update', async () => {
+    it('test timer buttons & responses', async () => {
         const iconNameStart = 'controller-play'
         const iconNamePause = 'controller-paus'
         const iconNameReset = 'ccw'
@@ -46,7 +28,6 @@ describe('PomodoroTimerView', () => {
         const ren = render(vc)
         const root = ren.container
 
-        // fetch and check timer control buttons
         const buttonRun = findAnyByTestID(root, 'run_button') as ReactTestInstance
         expect(isObject(buttonRun)).toBeTruthy()
         const buttonReset = findAnyByTestID(root, 'reset_button') as ReactTestInstance
@@ -119,6 +100,8 @@ describe('PomodoroTimerView', () => {
             pomodoroState={new DummyState()}
         />
         const ren = render(vc);
+        const clock = await ren.queryByTestId('countdown_clock') as ReactTestInstance
+        expect(isObject(clock)).toBeTruthy()
 
         // clock items should update automatically
         const minutesLabel = await ren.queryByTestId('minutes_label')
@@ -136,42 +119,61 @@ describe('PomodoroTimerView', () => {
         })
         expect(minutesLabel).toHaveTextContent('02');
         expect(secondsLabel).toHaveTextContent('45');
-    })
-
-    class DummyTimer implements CountdownTimerInterface<MinutesSeconds>{
-        readonly onTimerUpdateSubject = new Subject<DummyTimer>();
-        readonly onTimerToggleSubject = new Subject<DummyTimer>();
-        readonly onTimerFinishSubject = new Subject<DummyTimer>();
-        time = new MinutesSeconds(0, 0);
-        isRunning = false;
-        onCountdownUpdate(): Observable<any> {
-            return this.onTimerUpdateSubject.asObservable();
-        }
-        onCountdownToggle(): Observable<DummyTimer> {
-            return this.onTimerToggleSubject.asObservable();
-        }
-        onCountdownFinish(): Observable<any> {
-            return this.onTimerFinishSubject.asObservable();
-        }
-        getCurrentTime(): MinutesSeconds {
-            return this.time;
-        }
-        isTimerRunning(): boolean {
-            return this.isRunning;
-        }
-
-        // implement inside tests
-        startTimer(): void {throw new Error("Method not implemented.");}
-        pauseTimer(): void {throw new Error("Method not implemented.");}
-        resetTimer(): void {throw new Error("Method not implemented.");}
-    };
-
-    class DummyState implements PomodoroStateChangeInterface{
-        onPomodoroStateChange(): Observable<PomodoroStateChangeInterface> {
-            throw new Error("Method not implemented.");}
-        getPomodoroState(): PomodoroState {
-            throw new Error("Method not implemented.");}
-        skipPomodoroState(): void {
-            throw new Error("Method not implemented.");}
-    };
+    })    
 })
+
+
+class DummyTimer implements CountdownTimerInterface<MinutesSeconds>{
+    readonly onTimerUpdateSubject = new Subject<DummyTimer>();
+    readonly onTimerToggleSubject = new Subject<DummyTimer>();
+    readonly onTimerFinishSubject = new Subject<DummyTimer>();
+    time = new MinutesSeconds(0, 0);
+    isRunning = false;
+    onCountdownUpdate(): Observable<any> {
+        return this.onTimerUpdateSubject.asObservable();
+    }
+    onCountdownToggle(): Observable<DummyTimer> {
+        return this.onTimerToggleSubject.asObservable();
+    }
+    onCountdownFinish(): Observable<any> {
+        return this.onTimerFinishSubject.asObservable();
+    }
+    getCurrentTime(): MinutesSeconds {
+        return this.time;
+    }
+    isTimerRunning(): boolean {
+        return this.isRunning;
+    }
+    startTimer(): void {throw new Error("Method not implemented.");}
+    pauseTimer(): void {throw new Error("Method not implemented.");}
+    resetTimer(): void {throw new Error("Method not implemented.");}
+};
+
+
+class DummyState implements PomodoroStateChangeInterface{
+    onPomodoroStateChange(): Observable<PomodoroStateChangeInterface> {
+        throw new Error("Method not implemented.");}
+    getPomodoroState(): PomodoroState {
+        throw new Error("Method not implemented.");}
+    skipPomodoroState(): void {
+        throw new Error("Method not implemented.");}
+};
+
+
+type TestingQueryResults = ReactTestInstance|Array<ReactTestInstance>|null;
+function findAnyByProps(node: ReactTestInstance, props: {[propName: string]: any}): TestingQueryResults{
+    const result = node.findAllByProps(props);
+    if(result.length == 0) return null;
+    if(result.length == 1) return result[0];
+    return result;
+}
+function findAnyByName(node: ReactTestInstance, name: string): TestingQueryResults{
+    return findAnyByProps(node, {'name': name});
+}
+function findAnyByTestID(node: ReactTestInstance, testID: string): TestingQueryResults{
+    return findAnyByProps(node, {'testID': testID});
+}
+function isObject(subject:any){
+    if(Array.isArray(subject)) return false;
+    return subject !== null;
+}

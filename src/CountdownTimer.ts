@@ -10,10 +10,10 @@ enum TimerState {
 export type Milliseconds = number;
 
 export default class CountdownTimer implements CountdownTimerInterface<Milliseconds>{
-    private static readonly TIMER_INTERVAL_MS : number = 100;
+    private static readonly TIMER_INTERVAL_MS : Milliseconds = 100;
 
-    private _initialTimeMS : number = 0;
-    private _currentTimeMS : number = 0;
+    private _initialTime : Milliseconds = 0;
+    private _currentTime : Milliseconds = 0;
     private _state : TimerState = TimerState.Standby;
     private _intervalSubscription? : Subscription = undefined;
     private readonly _onTimerUpdateSubject : Subject<CountdownTimer>;
@@ -26,19 +26,19 @@ export default class CountdownTimer implements CountdownTimerInterface<Milliseco
         this._onTimerFinishSubject = new Subject<CountdownTimer>();
     }
 
-    setInitialTime(milliseconds : number) : void {
-        this._initialTimeMS = milliseconds;
+    setInitialTime(initialTime : Milliseconds) : void {
+        this._initialTime = initialTime;
         if(this._state === TimerState.Standby){
-            this._currentTimeMS = milliseconds;
+            this.setCurrentTime(initialTime);
         }
     }
 
-    getInitialTime() : number {
-        return this._initialTimeMS;
+    getInitialTime() : Milliseconds {
+        return this._initialTime;
     }
 
     getCurrentTime() : Milliseconds {
-        return this._currentTimeMS;
+        return this._currentTime;
     }
 
     onCountdownUpdate() : Observable<CountdownTimer> {
@@ -54,28 +54,28 @@ export default class CountdownTimer implements CountdownTimerInterface<Milliseco
     }
 
     isTimerRunning() : boolean {
-        return this._state == TimerState.Running;
+        return this._state === TimerState.Running;
     }
 
     startTimer() : void {
-        if(!this.isTimerRunning()){
-            this._intervalSubscription = interval(CountdownTimer.TIMER_INTERVAL_MS)
-                .subscribe(() => this.onTick());
-            this.setState(TimerState.Running);
-        }
+        if(this.isTimerRunning()) return;
+        const timeInterval = CountdownTimer.TIMER_INTERVAL_MS;
+        this._intervalSubscription?.unsubscribe();
+        this._intervalSubscription = interval(timeInterval)
+            .subscribe(() => this.onTick(timeInterval));
+        this.setState(TimerState.Running);
     }
 
     pauseTimer() : void {
-        if(this.isTimerRunning()){
-            this._intervalSubscription?.unsubscribe();
-            this._intervalSubscription = undefined;
-            this.setState(TimerState.Waiting);
-        }
+        if(!this.isTimerRunning()) return;
+        this._intervalSubscription?.unsubscribe();
+        this._intervalSubscription = undefined;
+        this.setState(TimerState.Waiting);
     }
 
     resetTimer() : void {
         this.pauseTimer();
-        this._currentTimeMS = this._initialTimeMS;
+        this.setCurrentTime(this._initialTime);
         this.setState(TimerState.Standby);
     }
 
@@ -87,14 +87,19 @@ export default class CountdownTimer implements CountdownTimerInterface<Milliseco
         this._state = state;
     }
 
-    private onTick(){
+    private setCurrentTime(time: Milliseconds) : void {
+        if(this._currentTime === time) return;
+        this._currentTime = time;
+        this._onTimerUpdateSubject.next(this);
+    }
+
+    private onTick(timeDelta: Milliseconds){
         if(!this.isTimerRunning()) return;
 
-        this._currentTimeMS = Math.max(0, 
-            this._currentTimeMS - CountdownTimer.TIMER_INTERVAL_MS);
-        this._onTimerUpdateSubject.next(this);
+        this.setCurrentTime(Math.max(0,
+            this._currentTime - timeDelta));
         
-        if(this._currentTimeMS === 0){
+        if(this._currentTime === 0){
             this.pauseTimer();
             this._onTimerFinishSubject.next(this);
         }

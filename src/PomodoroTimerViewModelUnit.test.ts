@@ -1,7 +1,8 @@
 import PomodoroTimerViewModel from "./PomodoroTimerViewModel"
 import ProfileStoreInterface from "./ProfileStoreInterface"
-import PomodoroStateChangeInterface, { PomodoroState } from "./PomodoroStateChangeInterface";
+import { PomodoroState } from "./PomodoroStateChangeInterface";
 import JestUnitHandler from "./utils/testUtils"
+
 
 describe('PomodoroTimerViewModel', () => {
     const jestHandler = new JestUnitHandler(true);
@@ -18,37 +19,35 @@ describe('PomodoroTimerViewModel', () => {
         const store = new DummyStore();
         const model = new PomodoroTimerViewModel(store);
 
-        // initial state should be "work"
+        expect(model.getPomodoroState()).toBe(PomodoroState.Work);
+
         for(var i:number = 1; i < store.getStateIterationsBeforeRecess(); ++i){
-            await passPomodoroState(model, PomodoroState.Work, store.getStateDurationWork());
-            await passPomodoroState(model, PomodoroState.Break, store.getStateDurationBreak());
+            await traversePomodoroState(model, PomodoroState.Work, store.getStateDurationWork());
+            await traversePomodoroState(model, PomodoroState.Break, store.getStateDurationBreak());
         }
-        await passPomodoroState(model, PomodoroState.Work, store.getStateDurationWork());
-        await passPomodoroState(model, PomodoroState.Recess, store.getStateDurationRecess());
+        await traversePomodoroState(model, PomodoroState.Work, store.getStateDurationWork());
+        await traversePomodoroState(model, PomodoroState.Recess, store.getStateDurationRecess());
         expect(model.getPomodoroState()).toBe(PomodoroState.Work);
     })
 
-    async function passPomodoroState(model : PomodoroTimerViewModel, expectedState : PomodoroState, durationMS : number){
+    async function traversePomodoroState(model : PomodoroTimerViewModel, expectedState : PomodoroState, durationMS : number){
         const initialState = model.getPomodoroState();
         expect(initialState).toBe(expectedState);
 
-        // subscribe to state changes 
-        let onChangeState : ((m:PomodoroStateChangeInterface) => void)|undefined
-            = jest.fn((_model : PomodoroStateChangeInterface) => {
-                // the new state should be a different one now
-                const newState = _model.getPomodoroState();
-                expect(newState).not.toBe(initialState);
-        });
+        let onChangeState : any = jest.fn(_model => {
+            expect(_model).toBeInstanceOf(PomodoroTimerViewModel)
+            const newState = _model.getPomodoroState();
+            // updates should only occur on state changes
+            expect(newState).not.toBe(initialState);
+        })
         const onChangeStateSubscription = model.onPomodoroStateChange()
-            .subscribe(_model => {if(onChangeState!==undefined)onChangeState(_model)});
+            .subscribe(_model => (onChangeState!==undefined)?onChangeState(_model):{});
         
-        // make timer of the current state run out
         model.startTimer();
         await jestHandler.delay(durationMS);
-        
-        // update should have been called by now exactly once
         expect(onChangeState).toBeCalledTimes(1);
-        onChangeState = undefined; // typescript requires me to clear this local var
+
+        onChangeState = undefined; // typescript requires this var to be cleared to avoid concurrent subscriptions
         onChangeStateSubscription.unsubscribe;
     }
 
@@ -56,8 +55,8 @@ describe('PomodoroTimerViewModel', () => {
         const store = new DummyStore();
         const model = new PomodoroTimerViewModel(store);
 
-        // initial state should be "work"
         expect(model.getPomodoroState()).toBe(PomodoroState.Work);
+
         model.startTimer();
         expect(model.isTimerRunning()).toBe(true);
         await jestHandler.delay(155);
@@ -83,14 +82,14 @@ describe('PomodoroTimerViewModel', () => {
         const store = new DummyStore();
         const model = new PomodoroTimerViewModel(store);
 
-        // initial state should be "work"
+        // skip while timer is paused
         expect(model.getPomodoroState()).toBe(PomodoroState.Work);
         model.skipPomodoroState();
         expect(model.getPomodoroState()).toBe(PomodoroState.Break);
         model.skipPomodoroState();
         expect(model.getPomodoroState()).toBe(PomodoroState.Work);
 
-        // skip should work while timer is still running
+        // skip while timer is running
         model.startTimer();
         await jestHandler.delay(155);
         model.skipPomodoroState();
@@ -99,22 +98,22 @@ describe('PomodoroTimerViewModel', () => {
 
     it('test time output', async () => {
         const store = new DummyStore();
-        let expectedMinutes = 25;
-        let expectedSeconds = 0;
-
-        // initial state should be "work"
-        store.setStateDurationWork(expectedMinutes * 60000 + expectedSeconds * 1000);
+        // set initial time to 25m:00s
+        store.setStateDurationWork(1500000);
         const model = new PomodoroTimerViewModel(store);
+        expect(model.getPomodoroState()).toBe(PomodoroState.Work);
 
         let time = model.getCurrentTime();
+        let expectedMinutes:string = "25"
+        let expectedSeconds:string = "00"
         expect(time.partMinutes).toBe(expectedMinutes);
         expect(time.partSeconds).toBe(expectedSeconds);
 
-        // let 15 seconds pass from 25:00 to 24:45
+        // let 15 seconds pass from 25m:00s to 24m:45s
         model.startTimer();
         await jestHandler.delay(15000);
-        expectedMinutes = 24;
-        expectedSeconds = 45;
+        expectedMinutes = "24";
+        expectedSeconds = "45";
         time = model.getCurrentTime();
         expect(time.partMinutes).toBe(expectedMinutes);
         expect(time.partSeconds).toBe(expectedSeconds);
@@ -147,7 +146,7 @@ describe('PomodoroTimerViewModel', () => {
             // 2: work
             // 2: recess
             // ---------
-            // 0: back from start
+            // 0: work (back from start)
         }
     }
 })

@@ -4,24 +4,22 @@ import { Observable, Subject } from "rxjs";
 import CountdownTimer from "./CountdownTimer";
 import CountdownTimerInterface from "./CountdownTimerInterface";
 
-export class MinutesSeconds{
+export class MinutesSeconds {
     readonly partMinutes : string;
     readonly partSeconds : string;
 
     constructor(_minutes : number, _seconds : number){
-        this.partMinutes = this.numberToLeadingZeroesString(_minutes, 2);
-        this.partSeconds = this.numberToLeadingZeroesString(_seconds, 2);
+        this.partMinutes = this.get2DigitNumberStringWithLeadingZeroes(_minutes);
+        this.partSeconds = this.get2DigitNumberStringWithLeadingZeroes(_seconds);
     }
 
-    private numberToLeadingZeroesString(n: number, size: number): string {
-        var num = n.toString();
-        while (num.length < size) num = "0" + num;
-        return num;
+    private get2DigitNumberStringWithLeadingZeroes(n: number): string {
+        return ("00" + n).slice(-2)
     }
 }
 
 export default class PomodoroTimerViewModel implements
-    PomodoroStateChangeInterface, CountdownTimerInterface<MinutesSeconds>{
+    PomodoroStateChangeInterface, CountdownTimerInterface<MinutesSeconds> {
 
     private readonly _timer : CountdownTimer;
     private readonly _store : ProfileStoreInterface;

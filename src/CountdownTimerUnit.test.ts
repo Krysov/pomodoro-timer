@@ -14,27 +14,20 @@ describe('CountdownTimer', () => {
     });
 
     it('test value assignment', async () => {
-        // time on setup should be uninitialized
         const timer = new CountdownTimer();
         expect(timer.getInitialTime()).toBe(0);
         expect(timer.getCurrentTime()).toBe(0);
 
-        // changing the initial time in its standby state
-        // should also update the current time
         timer.setInitialTime(12300);
         expect(timer.getInitialTime()).toBe(12300);
         expect(timer.getCurrentTime()).toBe(12300);
 
-        // changing the initial time while running
-        // should not change the current time
         timer.startTimer();
         await jestHandler.delay(500);
         timer.setInitialTime(45600);
         expect(timer.getInitialTime()).toBe(45600);
         expect(timer.getCurrentTime()).toBeLessThan(12300);
 
-        // changing the initial time while paused
-        // should not change the current time
         timer.pauseTimer();
         timer.setInitialTime(78900);
         expect(timer.getInitialTime()).toBe(78900);
@@ -50,11 +43,10 @@ describe('CountdownTimer', () => {
             .subscribe(() => onFinish());
         timer.startTimer();
 
-        // timer should actually be counting down
         await jestHandler.delay(2555);
         expectCloseTo(timer.getCurrentTime(), 1500, TIMER_TEST_PRECISION_MS);
 
-        // timer should've reached 0 by now
+        // timer should've reached 0
         await jestHandler.delay(1555);
         expectCloseTo(timer.getCurrentTime(), 0, TIMER_TEST_PRECISION_MS);
 
@@ -62,33 +54,31 @@ describe('CountdownTimer', () => {
         await jestHandler.delay(555);
         expect(timer.getCurrentTime()).toBe(0);
 
-        // completion event needs to have been called
-        // but give it another cycle to be triggered
         await jestHandler.delay(1);
         expect(onFinish).toBeCalledTimes(1);
         onFinishSubscription.unsubscribe();
 
-        // timer should return to its initial state
+        const onUpdate = jest.fn();
+        const onUpdateSubscription = timer.onCountdownUpdate()
+            .subscribe(() => onUpdate());
         timer.resetTimer();
         expect(timer.getCurrentTime()).toBe(initialTime);
+        expect(onUpdate).toBeCalledTimes(1);
     })
 
     it('test flow interrupted', async () => {
         const timer = new CountdownTimer();
         timer.setInitialTime(1000);
+
         timer.startTimer();
         await jestHandler.delay(555);
-
-        // make sure that the test case works properly
         expectCloseTo(timer.getCurrentTime(), 500, TIMER_TEST_PRECISION_MS);
 
-        // the current time should freeze while paused
         const timeAtPause = timer.getCurrentTime();
         timer.pauseTimer();
         await jestHandler.delay(255);
         expect(timer.getCurrentTime()).toBe(timeAtPause);
 
-        // the current time should be updating again when resuming
         timer.startTimer();
         await jestHandler.delay(555);
         expect(timer.getCurrentTime()).toBe(0);
@@ -98,21 +88,16 @@ describe('CountdownTimer', () => {
         const timer = new CountdownTimer();
         const initialTime = 1000;
         timer.setInitialTime(initialTime);
+
         timer.startTimer();
         await jestHandler.delay(255);
-
-        // make sure that the test case works properly
         expectCloseTo(timer.getCurrentTime(), 750, TIMER_TEST_PRECISION_MS);
 
-        // the current time needs to be set back to start
         timer.resetTimer();
         expect(timer.getCurrentTime()).toBe(initialTime);
-
-        // timer should have been paused after reset
         await jestHandler.delay(255);
         expect(timer.getCurrentTime()).toBe(initialTime);
 
-        // the timer should be able to run again after reset
         timer.startTimer();
         await jestHandler.delay(255);
         expectCloseTo(timer.getCurrentTime(), 750, TIMER_TEST_PRECISION_MS);
@@ -123,9 +108,9 @@ describe('CountdownTimer', () => {
         const initialTime = 1500;
         timer.setInitialTime(initialTime);
 
-        // with each update the current time has to decrease
         var previousTimeMS = initialTime;
         const onUpdate = jest.fn((_timer : CountdownTimer)  => {
+            // with each update the current time has to decrease
             expect(_timer.getCurrentTime()).toBeLessThan(previousTimeMS);
             previousTimeMS = _timer.getCurrentTime();
             ++numberOfUpdateCalls;
@@ -136,27 +121,53 @@ describe('CountdownTimer', () => {
         const onToggleSubscription = timer.onCountdownToggle()
             .subscribe(_timer => onToggle());
         
-        // the update must have been called multiple times now
         var numberOfUpdateCalls = 0;
         expect(onToggle).toBeCalledTimes(0);
         timer.startTimer();
         expect(onToggle).toBeCalledTimes(1);
         await jestHandler.delay(555);
-        // there is no function toBeCalledGreaterThanOrEqualTimes
         expect(numberOfUpdateCalls).toBeGreaterThanOrEqual(3);
 
-        // the timer should stop on pause
+        // should pause
         numberOfUpdateCalls = 0;
         timer.pauseTimer();
         expect(onToggle).toBeCalledTimes(2);
         await jestHandler.delay(555);
         expect(numberOfUpdateCalls).toBe(0);
 
-        // the update must have been resumed now
+        // should resume
         numberOfUpdateCalls = 0;
         timer.startTimer();
         expect(onToggle).toBeCalledTimes(3);
         await jestHandler.delay(555);
         expect(numberOfUpdateCalls).toBeGreaterThanOrEqual(3);
+    })
+
+    it('test timer speed and integrity', async () => {
+        const timer = new CountdownTimer();
+        const initialTime = 5000;
+        timer.setInitialTime(initialTime);
+        timer.startTimer();
+        timer.pauseTimer();
+        timer.startTimer();
+        timer.resetTimer();
+        timer.startTimer();
+        timer.resetTimer();
+        timer.startTimer();
+        await jestHandler.delay(5);
+        timer.pauseTimer();
+        await jestHandler.delay(5);
+        timer.startTimer();
+        
+        await jestHandler.delay(1005);
+        expectCloseTo(timer.getCurrentTime(), 4000, TIMER_TEST_PRECISION_MS);
+        await jestHandler.delay(1005);
+        expectCloseTo(timer.getCurrentTime(), 3000, TIMER_TEST_PRECISION_MS);
+        await jestHandler.delay(1005);
+        expectCloseTo(timer.getCurrentTime(), 2000, TIMER_TEST_PRECISION_MS);
+        await jestHandler.delay(1005);
+        expectCloseTo(timer.getCurrentTime(), 1000, TIMER_TEST_PRECISION_MS);
+        await jestHandler.delay(1005);
+        expectCloseTo(timer.getCurrentTime(), 0, TIMER_TEST_PRECISION_MS);
     })
 })

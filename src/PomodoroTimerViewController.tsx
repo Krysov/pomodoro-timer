@@ -37,7 +37,8 @@ const PomodoroTimerViewController = (props:PomodoroTimerViewProps) => {
 
   return <View style={styles.root}>
     <View style={styles.timerContainer}>
-        <View style={{
+        <View testID='countdown_clock'
+          style={{
             flexDirection:'row', 
             position:'absolute', 
             alignSelf:'center',
