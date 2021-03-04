@@ -2,6 +2,7 @@ import PomodoroTimerViewModel from "./PomodoroTimerViewModel"
 import ProfileStoreInterface from "./ProfileStoreInterface"
 import { PomodoroState } from "./PomodoroStateChangeInterface";
 import JestUnitHandler from "./utils/TestingUtils"
+import CountdownTimer from "./CountdownTimer";
 
 
 describe('PomodoroTimerViewModel', () => {
@@ -17,7 +18,8 @@ describe('PomodoroTimerViewModel', () => {
 
     it('test flow normal', async () => {
         const store = new DummyStore();
-        const model = new PomodoroTimerViewModel(store);
+        const timer = new CountdownTimer();
+        const model = new PomodoroTimerViewModel(store, timer);
 
         expect(model.getPomodoroState()).toBe(PomodoroState.Work);
 
@@ -53,7 +55,8 @@ describe('PomodoroTimerViewModel', () => {
 
     it('test flow interruption', async () => {
         const store = new DummyStore();
-        const model = new PomodoroTimerViewModel(store);
+        const timer = new CountdownTimer();
+        const model = new PomodoroTimerViewModel(store, timer);
 
         expect(model.getPomodoroState()).toBe(PomodoroState.Work);
 
@@ -80,7 +83,8 @@ describe('PomodoroTimerViewModel', () => {
 
     it('test flow skip state', async () => {
         const store = new DummyStore();
-        const model = new PomodoroTimerViewModel(store);
+        const timer = new CountdownTimer();
+        const model = new PomodoroTimerViewModel(store, timer);
 
         // skip while timer is paused
         expect(model.getPomodoroState()).toBe(PomodoroState.Work);
@@ -100,7 +104,8 @@ describe('PomodoroTimerViewModel', () => {
         const store = new DummyStore();
         // set initial time to 25m:00s
         store.setStateDurationWork(1500000);
-        const model = new PomodoroTimerViewModel(store);
+        const timer = new CountdownTimer();
+        const model = new PomodoroTimerViewModel(store, timer);
         expect(model.getPomodoroState()).toBe(PomodoroState.Work);
 
         let time = model.getCurrentTime();

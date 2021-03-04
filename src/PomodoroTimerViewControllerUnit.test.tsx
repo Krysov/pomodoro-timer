@@ -3,12 +3,12 @@ import { Observable, Subject } from "rxjs"
 import '@testing-library/jest-native/extend-expect'
 import { render, fireEvent, act, cleanup } from '@testing-library/react-native'
 import { ReactTestInstance } from "react-test-renderer"
-import { MinutesSeconds } from "./PomodoroTimerViewModel"
-import CountdownTimerInterface from './CountdownTimerInterface'
+import Timer from './Timer.interface'
 import PomodoroTimerViewController, { TimerButtonSettingsStart, TimerButtonSettingsPause, TimerButtonSettingsReset } from './PomodoroTimerViewController'
 import PomodoroStateChangeInterface, { PomodoroState } from './PomodoroStateChangeInterface'
 import { TouchableHighlight } from "react-native-gesture-handler";
 import { isObject, findAnyByTestID, findAnyByName } from "./utils/TestingUtils";
+import { MinutesSeconds } from "./TimeFormats"
 
 describe('PomodoroTimerView', () => {
 
@@ -104,19 +104,19 @@ describe('PomodoroTimerView', () => {
     })    
 })
 
-class DummyTimer implements CountdownTimerInterface<MinutesSeconds>{
+class DummyTimer implements Timer<MinutesSeconds>{
     readonly onTimerUpdateSubject = new Subject<DummyTimer>();
     readonly onTimerToggleSubject = new Subject<DummyTimer>();
     readonly onTimerFinishSubject = new Subject<DummyTimer>();
     time = new MinutesSeconds(0, 0);
     isRunning = false;
-    onCountdownUpdate(): Observable<any> {
+    onTimerUpdate(): Observable<any> {
         return this.onTimerUpdateSubject.asObservable();
     }
-    onCountdownToggle(): Observable<DummyTimer> {
+    onTimerToggle(): Observable<DummyTimer> {
         return this.onTimerToggleSubject.asObservable();
     }
-    onCountdownFinish(): Observable<any> {
+    onTimerFinish(): Observable<any> {
         return this.onTimerFinishSubject.asObservable();
     }
     getCurrentTime(): MinutesSeconds {

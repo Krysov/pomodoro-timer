@@ -39,7 +39,7 @@ describe('CountdownTimer', () => {
         const initialTime = 4000;
         timer.setInitialTime(initialTime);
         const onFinish = jest.fn();
-        const onFinishSubscription = timer.onCountdownFinish()
+        const onFinishSubscription = timer.onTimerFinish()
             .subscribe(() => onFinish());
         timer.startTimer();
 
@@ -59,7 +59,7 @@ describe('CountdownTimer', () => {
         onFinishSubscription.unsubscribe();
 
         const onUpdate = jest.fn();
-        const onUpdateSubscription = timer.onCountdownUpdate()
+        const onUpdateSubscription = timer.onTimerUpdate()
             .subscribe(() => onUpdate());
         timer.resetTimer();
         expect(timer.getCurrentTime()).toBe(initialTime);
@@ -115,10 +115,10 @@ describe('CountdownTimer', () => {
             previousTimeMS = _timer.getCurrentTime();
             ++numberOfUpdateCalls;
         });
-        const onUpdateSubscription = timer.onCountdownUpdate()
+        const onUpdateSubscription = timer.onTimerUpdate()
             .subscribe(_timer => onUpdate(_timer));
         const onToggle = jest.fn();
-        const onToggleSubscription = timer.onCountdownToggle()
+        const onToggleSubscription = timer.onTimerToggle()
             .subscribe(_timer => onToggle());
         
         var numberOfUpdateCalls = 0;

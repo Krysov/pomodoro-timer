@@ -1,27 +1,17 @@
 import ProfileStoreInterface from "./ProfileStoreInterface"
 import PomodoroStateChangeInterface, { PomodoroState } from "./PomodoroStateChangeInterface";
 import { Observable, Subject } from "rxjs";
-import CountdownTimer from "./CountdownTimer";
-import CountdownTimerInterface from "./CountdownTimerInterface";
+import Timer from "./Timer.interface";
+import InitialTime from "./InitialTime.interface";
+import { MinutesSeconds, Milliseconds } from "./TimeFormats";
 
-export class MinutesSeconds {
-    readonly partMinutes : string;
-    readonly partSeconds : string;
 
-    constructor(_minutes : number, _seconds : number){
-        this.partMinutes = this.get2DigitNumberStringWithLeadingZeroes(_minutes);
-        this.partSeconds = this.get2DigitNumberStringWithLeadingZeroes(_seconds);
-    }
-
-    private get2DigitNumberStringWithLeadingZeroes(n: number): string {
-        return ("00" + n).slice(-2)
-    }
-}
+type MillisTimer = Timer<Milliseconds> & InitialTime<Milliseconds>
 
 export default class PomodoroTimerViewModel implements
-    PomodoroStateChangeInterface, CountdownTimerInterface<MinutesSeconds> {
+    PomodoroStateChangeInterface, Timer<MinutesSeconds> {
 
-    private readonly _timer : CountdownTimer;
+    private readonly _timer : MillisTimer;
     private readonly _store : ProfileStoreInterface;
     private readonly _onPomodoroStateChange : Subject<PomodoroStateChangeInterface>;
     private readonly _onTimerUpdateSubject : Subject<PomodoroTimerViewModel>;
@@ -31,18 +21,18 @@ export default class PomodoroTimerViewModel implements
     private _state : PomodoroState;
     private _workIterations : number;
 
-    constructor(store : ProfileStoreInterface) {
+    constructor(store: ProfileStoreInterface, timer: MillisTimer) {
         this._onPomodoroStateChange = new Subject();
         this._onTimerUpdateSubject = new Subject();
         this._onTimerToggleSubject = new Subject();
         this._onTimerFinishSubject = new Subject();
-        this._timer = new CountdownTimer();
-        this._timer.onCountdownUpdate()
-            .subscribe(timer => this._onTimerUpdateSubject.next(this));
-        this._timer.onCountdownToggle()
-            .subscribe(timer => this._onTimerToggleSubject.next(this));
-        this._timer.onCountdownFinish()
-            .subscribe(timer => {
+        this._timer = timer;
+        this._timer.onTimerUpdate()
+            .subscribe(_timer => this._onTimerUpdateSubject.next(this));
+        this._timer.onTimerToggle()
+            .subscribe(_timer => this._onTimerToggleSubject.next(this));
+        this._timer.onTimerFinish()
+            .subscribe(_timer => {
                 this.gotoNextState();
                 this._onTimerFinishSubject.next(this);
             });
@@ -88,15 +78,15 @@ export default class PomodoroTimerViewModel implements
         );
     }
 
-    onCountdownUpdate(): Observable<PomodoroTimerViewModel> {
+    onTimerUpdate(): Observable<PomodoroTimerViewModel> {
         return this._onTimerUpdateSubject;
     }
 
-    onCountdownToggle(): Observable<PomodoroTimerViewModel> {
+    onTimerToggle(): Observable<PomodoroTimerViewModel> {
         return this._onTimerToggleSubject;
     }
 
-    onCountdownFinish(): Observable<PomodoroTimerViewModel> {
+    onTimerFinish(): Observable<PomodoroTimerViewModel> {
         return this._onTimerFinishSubject;
     }
 

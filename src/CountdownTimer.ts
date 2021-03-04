@@ -1,5 +1,7 @@
 import { Observable, Subscription, Subject, interval } from 'rxjs';
-import CountdownTimerInterface from './CountdownTimerInterface'
+import Timer from './Timer.interface'
+import InitialTime from './InitialTime.interface';
+import { Milliseconds } from './TimeFormats';
 
 enum TimerState {
     Standby,
@@ -7,9 +9,9 @@ enum TimerState {
     Waiting,
 }
 
-export type Milliseconds = number;
+export default class CountdownTimer implements 
+    Timer<Milliseconds>, InitialTime<Milliseconds> {
 
-export default class CountdownTimer implements CountdownTimerInterface<Milliseconds>{
     private static readonly TIMER_INTERVAL_MS : Milliseconds = 100;
 
     private _initialTime : Milliseconds = 0;
@@ -41,15 +43,15 @@ export default class CountdownTimer implements CountdownTimerInterface<Milliseco
         return this._currentTime;
     }
 
-    onCountdownUpdate() : Observable<CountdownTimer> {
+    onTimerUpdate() : Observable<CountdownTimer> {
         return this._onTimerUpdateSubject.asObservable();
     }
     
-    onCountdownToggle() : Observable<CountdownTimer> {
+    onTimerToggle() : Observable<CountdownTimer> {
         return this._onTimerToggleSubject.asObservable();
     }
 
-    onCountdownFinish() : Observable<CountdownTimer> {
+    onTimerFinish() : Observable<CountdownTimer> {
         return this._onTimerFinishSubject.asObservable();
     }
 

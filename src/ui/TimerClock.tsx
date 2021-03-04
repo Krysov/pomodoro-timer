@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from "react-native"
-import { MinutesSeconds } from "../PomodoroTimerViewModel";
+import { MinutesSeconds } from '../TimeFormats';
 // import CompletingCircle from './CompletingCircle';
 
 export default function TimerClock(props:TimerClockProps){

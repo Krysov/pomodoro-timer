@@ -1,12 +1,12 @@
 import React, {useState, useEffect} from 'react';
 import { StyleSheet } from 'react-native';
 import { View } from 'react-native';
-import CountdownTimerInterface from './CountdownTimerInterface';
-import { MinutesSeconds } from './PomodoroTimerViewModel';
+import Timer from './Timer.interface';
 import PomodoroStateChangeInterface from './PomodoroStateChangeInterface';
 import { merge } from "rxjs";
 import TimerButton from './ui/TimerButton';
 import TimerClock from './ui/TimerClock';
+import { MinutesSeconds } from './TimeFormats';
 
 
 export default function PomodoroTimerViewController(props:PomodoroTimerViewProps) {
@@ -15,9 +15,9 @@ export default function PomodoroTimerViewController(props:PomodoroTimerViewProps
   const [isRunning, setIsRunning] = useState(timer.isTimerRunning())
   useEffect(() => {
     const subscription = merge(
-      timer.onCountdownUpdate(),
-      timer.onCountdownToggle(),
-      timer.onCountdownFinish(),
+      timer.onTimerUpdate(),
+      timer.onTimerToggle(),
+      timer.onTimerFinish(),
     ).subscribe(_timer => {
       setTime(_timer.getCurrentTime())
       setIsRunning(timer.isTimerRunning())
@@ -52,29 +52,29 @@ export default function PomodoroTimerViewController(props:PomodoroTimerViewProps
 }
 
 export interface PomodoroTimerViewProps {
-  countdownTimer: CountdownTimerInterface<MinutesSeconds>;
+  countdownTimer: Timer<MinutesSeconds>;
   pomodoroState: PomodoroStateChangeInterface;
 }
 
 interface TimerButtonSettings{
   readonly iconName: string
   readonly iconSize: number
-  readonly onClick: (timer: CountdownTimerInterface<MinutesSeconds>) => void
+  readonly onClick: (timer: Timer<MinutesSeconds>) => void
 }
 export const TimerButtonSettingsStart = new class implements TimerButtonSettings {
   iconName = '►'
   iconSize = 32
-  onClick = (timer : CountdownTimerInterface<MinutesSeconds>) => timer.startTimer()
+  onClick = (timer : Timer<MinutesSeconds>) => timer.startTimer()
 }
 export const TimerButtonSettingsPause = new class implements TimerButtonSettings {
   iconName = '▐ ▌'
   iconSize = 16
-  onClick = (timer : CountdownTimerInterface<MinutesSeconds>) => timer.pauseTimer()
+  onClick = (timer : Timer<MinutesSeconds>) => timer.pauseTimer()
 }
 export const TimerButtonSettingsReset = new class implements TimerButtonSettings {
   iconName = '⟲'
   iconSize = 32
-  onClick = (timer : CountdownTimerInterface<MinutesSeconds>) => timer.resetTimer()
+  onClick = (timer : Timer<MinutesSeconds>) => timer.resetTimer()
 }
 
 const timerButtonSize = 64
