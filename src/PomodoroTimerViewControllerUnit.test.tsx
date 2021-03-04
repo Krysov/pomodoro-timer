@@ -26,23 +26,18 @@ describe('PomodoroTimerView', () => {
         />        
         const ren = render(vc)
         const root = ren.container
-
         const buttonRun = findAnyByTestID(root, 'run_button') as ReactTestInstance
         expect(isObject(buttonRun)).toBeTruthy()
         const buttonReset = findAnyByTestID(root, 'reset_button') as ReactTestInstance
         expect(isObject(buttonReset)).toBeTruthy()
-
-        // should have reset and start
         expect(findAnyByName(root, iconNameReset)).not.toBeNull()
         expect(findAnyByName(root, iconNameStart)).not.toBeNull()
         expect(findAnyByName(root, iconNamePause)).toBeNull()
 
-        // simulate press reset
         timerObject.resetTimer=jest.fn()
         await fireEvent(buttonReset.findByType(TouchableHighlight), 'onPress')
         await expect(timerObject.resetTimer).toBeCalledTimes(1)
 
-        // simulate press start
         timerObject.startTimer=jest.fn()
         await fireEvent(buttonRun.findByType(TouchableHighlight), 'onPress')
         await expect(timerObject.startTimer).toBeCalledTimes(1)
@@ -50,12 +45,9 @@ describe('PomodoroTimerView', () => {
             timerObject.isRunning = true
             timerObject.onTimerToggleSubject.next(timerObject)
         })
-        
-        // should be set to pause
         await expect(findAnyByName(root, iconNameStart)).toBeNull()
         await expect(findAnyByName(root, iconNamePause)).not.toBeNull()
 
-        // simulate press pause
         timerObject.pauseTimer=jest.fn()
         await fireEvent(buttonRun.findByType(TouchableHighlight), 'onPress')
         await expect(timerObject.pauseTimer).toBeCalledTimes(1)
@@ -63,12 +55,9 @@ describe('PomodoroTimerView', () => {
             timerObject.isRunning = false
             timerObject.onTimerToggleSubject.next(timerObject)
         })
-
-        // should be set to start
         await expect(findAnyByName(ren.container, iconNameStart)).not.toBeNull()
         await expect(findAnyByName(ren.container, iconNamePause)).toBeNull()
 
-        // simulate press start
         timerObject.startTimer=jest.fn()
         await fireEvent(buttonRun.findByType(TouchableHighlight), 'onPress')
         await expect(timerObject.startTimer).toBeCalledTimes(1)
@@ -76,18 +65,13 @@ describe('PomodoroTimerView', () => {
             timerObject.isRunning = true
             timerObject.onTimerToggleSubject.next(timerObject)
         })
-
-        // should be set to pause
         await expect(findAnyByName(root, iconNameStart)).toBeNull()
         await expect(findAnyByName(root, iconNamePause)).not.toBeNull()
 
-        // simulate timer finishing
         await act(async ()=>{
             timerObject.isRunning = false
             timerObject.onTimerFinishSubject.next(timerObject)
         })
-        
-        // should be set to start
         await expect(findAnyByName(ren.container, iconNameStart)).not.toBeNull()
         await expect(findAnyByName(ren.container, iconNamePause)).toBeNull()
     })
@@ -102,7 +86,6 @@ describe('PomodoroTimerView', () => {
         const clock = await ren.queryByTestId('countdown_clock') as ReactTestInstance
         expect(isObject(clock)).toBeTruthy()
 
-        // clock items should update automatically
         const minutesLabel = await ren.queryByTestId('minutes_label')
         const secondsLabel = await ren.queryByTestId('seconds_label')
         await act(async()=>{

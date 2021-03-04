@@ -36,14 +36,16 @@ export default function PomodoroTimerViewController(props:PomodoroTimerViewProps
       <TimerButton
         testID='reset_button'
         timerButtonSize={timerButtonSize}
-        settings={TimerButtonSettingsReset}
-        timer={timer}
+        iconName={TimerButtonSettingsReset.iconName}
+        iconSize={TimerButtonSettingsReset.iconSize}
+        onClick={()=>TimerButtonSettingsReset.onClick(timer)}
       />
       <TimerButton
         testID='run_button'
         timerButtonSize={timerButtonSize}
-        settings={runButtonSettings}
-        timer={timer}
+        iconName={runButtonSettings.iconName}
+        iconSize={runButtonSettings.iconSize}
+        onClick={()=>runButtonSettings.onClick(timer)}
       />
     </View>
   </View>

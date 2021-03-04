@@ -9,7 +9,7 @@ import Icon from "./Icon";
 export default function TimerButton(props:TimerButtonProps){
     const timerButtonSize = props.timerButtonSize
     return <TouchableHighlight
-        onPress = {() => props.settings.onClick(props.timer)}
+        onPress = {() => props.onClick()}
         underlayColor = '#f42'
         style = {[{
             width: timerButtonSize,
@@ -21,8 +21,8 @@ export default function TimerButton(props:TimerButtonProps){
             alignSelf:"center",
         }, props.style]}>
         <Icon
-            name={props.settings.iconName}
-            size={props.settings.iconSize}
+            name={props.iconName}
+            size={props.iconSize}
             style = {{
                 width: timerButtonSize,
                 height: timerButtonSize,
@@ -32,8 +32,9 @@ export default function TimerButton(props:TimerButtonProps){
 }
 
 export interface TimerButtonProps extends ViewProps{
-    settings: TimerButtonSettings
-    timer: CountdownTimerInterface<MinutesSeconds>
+    readonly iconName: string
+    readonly iconSize: number
+    onClick: ()=>void
     timerButtonSize: number
 }
 
