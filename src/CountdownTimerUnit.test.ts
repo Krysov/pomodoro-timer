@@ -1,5 +1,5 @@
 import CountdownTimer from './CountdownTimer';
-import JestUnitHandler, {expectCloseTo} from "./utils/testUtils"
+import JestUnitHandler, {expectCloseTo} from "./utils/TestingUtils"
 
 describe('CountdownTimer', () => {
     const TIMER_TEST_PRECISION_MS = 100;

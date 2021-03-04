@@ -5,20 +5,19 @@ import { render, fireEvent, act, cleanup } from '@testing-library/react-native'
 import { ReactTestInstance } from "react-test-renderer"
 import { MinutesSeconds } from "./PomodoroTimerViewModel"
 import CountdownTimerInterface from './CountdownTimerInterface'
-import PomodoroTimerViewController from './PomodoroTimerViewController'
+import PomodoroTimerViewController, { TimerButtonSettingsStart, TimerButtonSettingsPause, TimerButtonSettingsReset } from './PomodoroTimerViewController'
 import PomodoroStateChangeInterface, { PomodoroState } from './PomodoroStateChangeInterface'
 import { TouchableHighlight } from "react-native-gesture-handler";
-
+import { isObject, findAnyByTestID, findAnyByName } from "./utils/TestingUtils";
 
 describe('PomodoroTimerView', () => {
 
     afterEach(() => cleanup())
 
     it('test timer buttons & responses', async () => {
-        const iconNameStart = 'controller-play'
-        const iconNamePause = 'controller-paus'
-        const iconNameReset = 'ccw'
-
+        const iconNameStart = TimerButtonSettingsStart.iconName
+        const iconNamePause = TimerButtonSettingsPause.iconName
+        const iconNameReset = TimerButtonSettingsReset.iconName
         const stateObject = new DummyState()
         const timerObject = new DummyTimer()
         const vc = <PomodoroTimerViewController
@@ -122,7 +121,6 @@ describe('PomodoroTimerView', () => {
     })    
 })
 
-
 class DummyTimer implements CountdownTimerInterface<MinutesSeconds>{
     readonly onTimerUpdateSubject = new Subject<DummyTimer>();
     readonly onTimerToggleSubject = new Subject<DummyTimer>();
@@ -149,7 +147,6 @@ class DummyTimer implements CountdownTimerInterface<MinutesSeconds>{
     resetTimer(): void {throw new Error("Method not implemented.");}
 };
 
-
 class DummyState implements PomodoroStateChangeInterface{
     onPomodoroStateChange(): Observable<PomodoroStateChangeInterface> {
         throw new Error("Method not implemented.");}
@@ -158,22 +155,3 @@ class DummyState implements PomodoroStateChangeInterface{
     skipPomodoroState(): void {
         throw new Error("Method not implemented.");}
 };
-
-
-type TestingQueryResults = ReactTestInstance|Array<ReactTestInstance>|null;
-function findAnyByProps(node: ReactTestInstance, props: {[propName: string]: any}): TestingQueryResults{
-    const result = node.findAllByProps(props);
-    if(result.length == 0) return null;
-    if(result.length == 1) return result[0];
-    return result;
-}
-function findAnyByName(node: ReactTestInstance, name: string): TestingQueryResults{
-    return findAnyByProps(node, {'name': name});
-}
-function findAnyByTestID(node: ReactTestInstance, testID: string): TestingQueryResults{
-    return findAnyByProps(node, {'testID': testID});
-}
-function isObject(subject:any){
-    if(Array.isArray(subject)) return false;
-    return subject !== null;
-}

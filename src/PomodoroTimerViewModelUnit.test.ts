@@ -1,7 +1,7 @@
 import PomodoroTimerViewModel from "./PomodoroTimerViewModel"
 import ProfileStoreInterface from "./ProfileStoreInterface"
 import { PomodoroState } from "./PomodoroStateChangeInterface";
-import JestUnitHandler from "./utils/testUtils"
+import JestUnitHandler from "./utils/TestingUtils"
 
 
 describe('PomodoroTimerViewModel', () => {

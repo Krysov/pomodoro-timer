@@ -1,13 +1,19 @@
 import React from 'react';
-import { Icon, IconProps } from 'react-native-elements';
-import { View } from 'react-native';
-import ErrorBoundary from 'react-native-error-boundary'
+import { Text, View, FlexStyle, StyleSheet } from 'react-native';
 
-export default class IconWrapper extends React.Component<IconProps> {
-    readonly fallback = (props: { error: Error, resetError: Function }) => <View/>
-    render() {
-        return <ErrorBoundary onError={()=>{}} FallbackComponent={this.fallback}>
-            <Icon {...this.props}/>
-        </ErrorBoundary>
-    }
+export default function Icon(props: IconProps) {
+    return <View style={[props.style]}>
+        <Text style={[StyleSheet.absoluteFillObject, {
+            color:'#fff',
+            fontSize:props.size,
+            textAlign:'center',
+            textAlignVertical:'center'
+        }]}>{props.name}</Text>
+    </View>
+}
+
+export interface IconProps {
+    name: string
+    size: number
+    style: FlexStyle
 }
