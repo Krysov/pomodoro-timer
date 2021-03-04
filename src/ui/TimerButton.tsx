@@ -1,7 +1,5 @@
 import React from 'react';
 import { ViewProps } from "react-native";
-import CountdownTimerInterface from "../CountdownTimerInterface";
-import { MinutesSeconds } from "../PomodoroTimerViewModel";
 import { TouchableHighlight } from "react-native-gesture-handler";
 import Icon from "./Icon";
 
@@ -36,10 +34,4 @@ export interface TimerButtonProps extends ViewProps{
     readonly iconSize: number
     onClick: ()=>void
     timerButtonSize: number
-}
-
-export interface TimerButtonSettings{
-    readonly iconName: string
-    readonly iconSize: number
-    readonly onClick: (timer: CountdownTimerInterface<MinutesSeconds>) => void
 }

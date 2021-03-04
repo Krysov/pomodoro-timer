@@ -5,7 +5,7 @@ import CountdownTimerInterface from './CountdownTimerInterface';
 import { MinutesSeconds } from './PomodoroTimerViewModel';
 import PomodoroStateChangeInterface from './PomodoroStateChangeInterface';
 import { merge } from "rxjs";
-import TimerButton, { TimerButtonSettings } from './ui/TimerButton';
+import TimerButton from './ui/TimerButton';
 import TimerClock from './ui/TimerClock';
 
 
@@ -56,6 +56,11 @@ export interface PomodoroTimerViewProps {
   pomodoroState: PomodoroStateChangeInterface;
 }
 
+interface TimerButtonSettings{
+  readonly iconName: string
+  readonly iconSize: number
+  readonly onClick: (timer: CountdownTimerInterface<MinutesSeconds>) => void
+}
 export const TimerButtonSettingsStart = new class implements TimerButtonSettings {
   iconName = '►'
   iconSize = 32
