@@ -8,7 +8,6 @@
     "ios": "npm run build-wasm && react-native run-ios",
     "web": "expo start --web",
     "start": "react-native start",
-    "build-wasm": "cargo build --target wasm32-unknown-unknown && wasm-bindgen target/wasm32-unknown-unknown/debug/pixel_loader.wasm --out-dir build",
     "test": "jest -u --forceExit --coverage --detectOpenHandles",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -42,8 +41,7 @@
     "react-native-webview": "^11.2.4",
     "rn-fetch-blob": "^0.12.0",
     "rxjs": "^6.6.6",
-    "typescript": "^4.2.2",
-    "webassembly": "^0.11.0"
+    "typescript": "^4.2.2"
   },
   "devDependencies": {
     "@babel/core": "^7.13.8",

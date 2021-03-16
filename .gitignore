@@ -69,6 +69,3 @@ coverage/
 
 # Detox
 .detoxrc.json
-
-# WASM
-/target
