@@ -65,6 +65,10 @@ web-build/
 
 # VSCode
 .vscode/
+coverage/
 
 # Detox
 .detoxrc.json
+
+# WASM
+/target
