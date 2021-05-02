@@ -1,13 +1,14 @@
 import React, { ReactElement } from 'react';
 import { View } from 'react-native';
-import { cleanup, render } from '@testing-library/react-native';
+// import { cleanup, render } from '@testing-library/react-native';
+import TestRenderer from 'react-test-renderer';
 import StepsCarousel, { StepsCarouselAdapter, CarouselState } from './StepsCarousel';
-import ViewShot, { releaseCapture } from "react-native-view-shot";
-import chalk from 'chalk';
+// import ViewShot, { captureRef, releaseCapture } from "react-native-view-shot";
+// import chalk from 'chalk';
 
 describe('StepsCarousel', ()=>{
 
-    afterEach(() => cleanup())
+    // afterEach(() => cleanup())
     
     it('test simple flow', async ()=>{
         let numSteps = 0
@@ -32,28 +33,53 @@ describe('StepsCarousel', ()=>{
             }
         }
         let onCapture = async (uri: string) => {
+            console.log(uri);
             let result = await fetch(uri);
             console.log(result);
             console.log(await result.blob());
             releaseCapture(uri);
         }
-        const ren = await render(<ViewShot
-            captureMode='mount'
-            onCapture={onCapture}
-            onCaptureFailure={e => console.log(e)}
-            options={{format:'raw', width:16, height: 8, result: 'data-uri'}}>
-            <StepsCarousel
-                style={{width, height}}
-                adapter={stepsAdapter}
-                ref={ref => carousel = ref}
-                onTriggeredNextStep={onTriggerNext}/>
-        </ViewShot>);
+        let onRef = async (ref: StepsCarousel) => {
+            carousel = ref;
+            // const result = await captureRef(carousel, {
+            //     captureMode: 'mount',
+            //     onCapture: onCapture,
+            //     // onCaptureFailure:(e) => console.log(e),
+            //     options:{format:'raw', width:16, height: 8, result: 'raw'}
+            // });
+            await captureRef(carousel, {
+                format: "jpg",
+                quality: 0.8
+            }).then(
+                uri => console.log("Image saved to", uri),
+                error => console.error("Oops, snapshot failed", error)
+            );
+        }
+        // const ren = await render(<ViewShot
+        //     style={{width, height}}
+        //     captureMode='mount'
+        //     onCapture={onCapture}
+        //     onCaptureFailure={e => console.log(e)}
+        //     options={{format:'raw', width:16, height: 8, result: 'data-uri'}}>
+        //     <StepsCarousel
+        //         style={{width, height}}
+        //         adapter={stepsAdapter}
+        //         ref={ref => carousel = ref}
+        //         onTriggeredNextStep={onTriggerNext}/>
+        // </ViewShot>);
         // const ren = await render(<StepsCarousel
         //     style={{width, height}}
         //     adapter={stepsAdapter}
-        //     ref={ref => carousel = ref}
+        //     ref={onRef}
         //     onTriggeredNextStep={onTriggerNext}/>
         // );
+
+        await TestRenderer.create(<StepsCarousel
+            style={{width, height}}
+            adapter={stepsAdapter}
+            ref={onRef}
+            onTriggeredNextStep={onTriggerNext}/>);
+
         const setCarouselState = (carousel! as any).setCarouselState = jest.fn(
             (state: CarouselState) => (carousel! as any).setCarouselState(state));
         expect(setCarouselState).toBeCalledTimes(0);
@@ -81,7 +107,7 @@ describe('StepsCarousel', ()=>{
         }
         console.log(toLog);
 
-        // ░▒▓█
+
         const a = 0xff;
         await new Promise(r => setTimeout(r, 4500));
         expect(setCarouselState).toHaveBeenLastCalledWith(CarouselState.isGoing);

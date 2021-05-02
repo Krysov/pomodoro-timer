@@ -11,7 +11,7 @@ export enum CarouselState{
     isResetting,
 }
 
-export default class StepsCarousel extends Component<StepsCarouselProps>{
+export default class StepsCarousel extends React.Component<StepsCarouselProps>{
     
     private _scrollView?: ScrollView|null
     private _currentOffset?: number|undefined
@@ -98,7 +98,7 @@ export default class StepsCarousel extends Component<StepsCarouselProps>{
         this._updateSubscription?.unsubscribe();
         this._updateSubscription = interval(updateInterval)
             .subscribe(() => this.onUpdate(updateInterval));
-        console.log('mount');
+        // console.log('mount');
     }
 
     componentWillUnmount(){
@@ -120,11 +120,11 @@ export default class StepsCarousel extends Component<StepsCarouselProps>{
 
         if( this._carouselState !== CarouselState.isResetting && offset >= width - threshold ){
             this.setCarouselState( CarouselState.isResetting )
-            console.log(this._carouselState.toString());
+            // console.log(this._carouselState.toString());
         }else if( this._carouselState === CarouselState.isResetting && offset <= threshold ){
             this.setCarouselState( CarouselState.isGoing )
             this.setState({})
-            console.log(this._carouselState.toString());
+            // console.log(this._carouselState.toString());
         }
     }
 
@@ -174,15 +174,13 @@ export default class StepsCarousel extends Component<StepsCarouselProps>{
         showsVerticalScrollIndicator={false}
         scrollEnabled={true}
         pagingEnabled={false}
-        // scrollEventThrottle={120}
-        // onScroll={event => {
-        //     this._currentOffset = event.nativeEvent.contentOffset.x
-        // }}
+        scrollEventThrottle={32}
+        onScroll={event => {
+            this._currentOffset = event.nativeEvent.contentOffset.x
+        }}
         ref={view => this._scrollView = view}
-        // reference={view => this._scrollView = view}
         onScrollBeginDrag={(event)=>{
             this._isDragging = true;
-            // this._scrollView?.setNativeProps({pagingEnabled: true})
         }}
         onScrollEndDrag={(event)=>{
             this._isDragging = false;
@@ -196,28 +194,13 @@ export default class StepsCarousel extends Component<StepsCarouselProps>{
         //     this._scrollView?.setNativeProps({pagingEnabled: false})
         //     this._scrollView?.scrollTo({x:0, animated: false})
         // }}
-        // onLayout={event => this.setState({width: event.nativeEvent.layout.width})}
+        onLayout={event => this.setState({width: event.nativeEvent.layout.width})}
         >
             {this.props.adapter.getCurrentStepView(this.getState().width)}
             {this.props.adapter.getNextStepView(this.getState().width)}
         </ScrollView>
     }
 }
-
-// class RefScrollView extends ScrollView{
-//     readonly _ref:(ref: RefScrollViewProps) => void
-//     constructor(props: RefScrollViewProps){
-//         super(props);
-//         this._ref = props.reference
-//     }
-//     componentDidMount(){
-//         this._ref?.call(this, this)
-//     }
-// }
-
-// interface RefScrollViewProps extends ScrollViewProps{
-//     reference: (ref: ScrollView) => void;
-// }
 
 
 
