@@ -1,126 +1,131 @@
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useRef } from 'react';
 import { View } from 'react-native';
-// import { cleanup, render } from '@testing-library/react-native';
 import TestRenderer from 'react-test-renderer';
-import StepsCarousel, { StepsCarouselAdapter, CarouselState } from './StepsCarousel';
-// import ViewShot, { captureRef, releaseCapture } from "react-native-view-shot";
-// import chalk from 'chalk';
+// import StepsCarousel, { StepsCarouselAdapter, CarouselState } from './StepsCarousel';
 
 describe('StepsCarousel', ()=>{
 
-    // afterEach(() => cleanup())
-    
-    it('test simple flow', async ()=>{
-        let numSteps = 0
-        let progress = 0
-        const width = 256;
-        const height = 128;
-        let carousel: StepsCarousel
-        const onTriggerNext = jest.fn()
-        const steps = [
-            {testID: 'step1', color:'#f0f'},
-            {testID: 'step2', color:'#ff0'},
-            {testID: 'step3', color:'#0ff'},
-        ];
-        const stepsSequence = [steps[0], steps[1], steps[0], steps[2]];
-        const stepsAdapter = new class implements StepsCarouselAdapter{
-            getCurrentStepView(expectedWidth: number){ return this.getComponent(expectedWidth, this.getStep(numSteps)) }
-            getNextStepView(expectedWidth: number){ return this.getComponent(expectedWidth, this.getStep(numSteps + 1)) }
-            getStepProgress(){ return progress }
-            private getStep(idx: number){ return stepsSequence[idx%stepsSequence.length] }
-            private getComponent(width: number, data: any): ReactElement{
-                return <View testID={data.testID} style={{backgroundColor:data.color, width}}/>
-            }
-        }
-        let onCapture = async (uri: string) => {
-            console.log(uri);
-            let result = await fetch(uri);
-            console.log(result);
-            console.log(await result.blob());
-            releaseCapture(uri);
-        }
-        let onRef = async (ref: StepsCarousel) => {
-            carousel = ref;
-            // const result = await captureRef(carousel, {
-            //     captureMode: 'mount',
-            //     onCapture: onCapture,
-            //     // onCaptureFailure:(e) => console.log(e),
-            //     options:{format:'raw', width:16, height: 8, result: 'raw'}
-            // });
-            await captureRef(carousel, {
-                format: "jpg",
-                quality: 0.8
-            }).then(
-                uri => console.log("Image saved to", uri),
-                error => console.error("Oops, snapshot failed", error)
-            );
-        }
-        // const ren = await render(<ViewShot
-        //     style={{width, height}}
-        //     captureMode='mount'
-        //     onCapture={onCapture}
-        //     onCaptureFailure={e => console.log(e)}
-        //     options={{format:'raw', width:16, height: 8, result: 'data-uri'}}>
-        //     <StepsCarousel
-        //         style={{width, height}}
-        //         adapter={stepsAdapter}
-        //         ref={ref => carousel = ref}
-        //         onTriggeredNextStep={onTriggerNext}/>
-        // </ViewShot>);
-        // const ren = await render(<StepsCarousel
-        //     style={{width, height}}
-        //     adapter={stepsAdapter}
-        //     ref={onRef}
-        //     onTriggeredNextStep={onTriggerNext}/>
-        // );
+    let step1 = <View testID={'idStep1'}/>;
+    let step2 = <View testID={'idStep2'}/>;
+    let step3 = <View testID={'idStep3'}/>;
 
-        await TestRenderer.create(<StepsCarousel
+    it('test steps adapter', async ()=>{
+        var progress = 0;
+        var position = 0;
+        let adapter = new Adapter<string>();
+        adapter.onCreateView = key => getStepViewFor(key);
+        adapter.onFetchKeyCurrent = () => getStepKeyAt(position);
+        adapter.onFetchKeyFollowing = () => getStepKeyAt(position + 1);
+        adapter.onFetchProgress = () => progress;
+
+        adapter.update();
+        expect((adapter as any).getKeyCurrent()).toBe('keyStep1');
+        expect((adapter as any).getKeyFollowing()).toBe('keyStep2');
+        expect((adapter as any).getViewCurrent()).toBe(step1);
+        expect((adapter as any).getViewFollowing()).toBe(step2);
+        expect(Math.trunc((adapter as any).getStepProgress())*10).toBe(0);
+
+        position = 3;
+        progress = 0.5;
+        adapter.update();
+        expect((adapter as any).getKeyCurrent()).toBe('keyStep3');
+        expect((adapter as any).getKeyFollowing()).toBe('keyStep1');
+        expect((adapter as any).getViewCurrent()).toBe(step3);
+        expect((adapter as any).getViewFollowing()).toBe(step1);
+        expect(Math.trunc((adapter as any).getStepProgress())*10).toBe(5);
+
+        const onTriggerNext = jest.fn((skipped, selected:string)=>{
+            expect(skipped).toBe(getStepKeyAt(position));
+            expect(selected).toBe(getStepKeyAt(position + 1));
+            position++;
+            progress = 0;
+            adapter.update();
+        })
+        adapter.onUserMovedNext = (keySkipped, keySelected) => onTriggerNext;
+        adapter.update = jest.fn(() => adapter.update());
+
+        // todo: trigger and await onUserMovedNext
+        expect(onTriggerNext).toBeCalledTimes(1);
+        expect(adapter.update).toBeCalledTimes(1);
+        expect((adapter as any).getKeyCurrent()).toBe('keyStep1');
+        expect((adapter as any).getKeyFollowing()).toBe('keyStep2');
+        expect(Math.trunc((adapter as any).getStepProgress())*10).toBe(0);
+    });
+
+    it('test carousel view', async ()=>{
+        const width = 300;
+        const height = 100;
+        var progress = 0;
+        var position = 0;
+        let adapter = new Adapter<string>();
+        adapter.onCreateView = key => getStepViewFor(key);
+        adapter.onFetchKeyCurrent = () => getStepKeyAt(position);
+        adapter.onFetchKeyFollowing = () => getStepKeyAt(position + 1);
+        adapter.onFetchProgress = () => progress;
+        adapter.onUserMovedNext = (keySkipped, keySelected) => {
+            position++;
+            progress = 0;
+            adapter.update();
+        };
+        let carousel = useRef();
+        let ren = await TestRenderer.create(<Carousel
             style={{width, height}}
-            adapter={stepsAdapter}
-            ref={onRef}
-            onTriggeredNextStep={onTriggerNext}/>);
+            adapter={adapter}
+            ref={carousel}
+        />);
 
-        const setCarouselState = (carousel! as any).setCarouselState = jest.fn(
-            (state: CarouselState) => (carousel! as any).setCarouselState(state));
-        expect(setCarouselState).toBeCalledTimes(0);
+        expect(ren.root.findAllByProps({'testID': 'idStep1'})).not.toBeNull();
+        expect(ren.root.findAllByProps({'testID': 'idStep2'})).not.toBeNull();
+        expect(ren.root.findAllByProps({'testID': 'idStep3'})).toBeNull();
 
-        function getPixelChar(r: number, g: number, b: number, a: number): string {
-            a = Math.min(255, Math.max(0, a));
-            const charSet = ':░▒▓█';
-            const char = charSet[Math.round(a/64.)];
-            return chalk.rgb(
-                Math.min(255, Math.max(0, r)),
-                Math.min(255, Math.max(0, g)),
-                Math.min(255, Math.max(0, b)))
-                .visible(charSet[Math.round(a/64.)]);
-        }
+        position = 2;
+        adapter.update();
+        expect(ren.root.findAllByProps({'testID': 'idStep1'})).not.toBeNull();
+        expect(ren.root.findAllByProps({'testID': 'idStep2'})).toBeNull();
+        expect(ren.root.findAllByProps({'testID': 'idStep3'})).not.toBeNull();
 
-        let toLog = '';
-        for(let y = 0; y <= 16; y++){
-            if(y>0) toLog += '\n';
-            for(let x = 0; x <= 16; x++){
-                for(let z = 0; z < 2; z++){
-                    toLog += getPixelChar(x*16, 127, y*16, y*16);
-                }
-                // toLog += ' '
-            }
-        }
-        console.log(toLog);
+        position = 3;
+        adapter.update();
+        // todo: send event user begin drag
+        // todo: send event user move left
+        // todo: send event user stops drag
+        expect(ren.root.findAllByProps({'testID': 'idStep1'})).not.toBeNull();
+        expect(ren.root.findAllByProps({'testID': 'idStep2'})).not.toBeNull();
+        expect(ren.root.findAllByProps({'testID': 'idStep3'})).toBeNull();
 
+        jest.useFakeTimers();
+        position = 3;
+        adapter.update();
+        // todo: send event user begin drag
+        position = 0;
+        adapter.update();
+        expect(ren.root.findAllByProps({'testID': 'idStep1'})).not.toBeNull();
+        expect(ren.root.findAllByProps({'testID': 'idStep2'})).toBeNull();
+        expect(ren.root.findAllByProps({'testID': 'idStep3'})).not.toBeNull();
+        await jest.advanceTimersByTime(1000);
+        expect(ren.root.findAllByProps({'testID': 'idStep1'})).not.toBeNull();
+        expect(ren.root.findAllByProps({'testID': 'idStep2'})).not.toBeNull();
+        expect(ren.root.findAllByProps({'testID': 'idStep3'})).toBeNull();
+        jest.useRealTimers();
+    });
 
-        const a = 0xff;
-        await new Promise(r => setTimeout(r, 4500));
-        expect(setCarouselState).toHaveBeenLastCalledWith(CarouselState.isGoing);
-        
+    function getStepKeyAt(i:number): string {
+        let loopedSequence = [
+            'keyStep1',
+            'keyStep2',
+            'keyStep1',
+            'keyStep3',
+        ];
+        return loopedSequence[i % loopedSequence.length];
+    }
 
+    function getStepViewFor(key: string): ReactElement{
+        let map = new Map<string, ReactElement>([
+            ['keyStep1', step1],
+            ['keyStep2', step2],
+            ['keyStep3', step3],
+        ])
+        return map.get(key)!;
+    }
 
-        // carousel!.setStepProgress(0);
-        
-        
-        
-        
-        
-
-
-    })
-})
+});
