@@ -5,7 +5,6 @@ import CountdownTimer from './src/CountdownTimer';
 import PomodoroTimerViewController from './src/PomodoroTimerViewController';
 import PomodoroTimerViewModel from './src/PomodoroTimerViewModel';
 import ProfileStoreInterface from './src/ProfileStoreInterface';
-import GradientPlane from './src/ui/GradientPlane';
 import StepsCarousel, { StepsCarouselAdapter } from './src/ui/StepsCarousel';
 
 
@@ -58,11 +57,10 @@ export default function App(){
 
   return (
     <View style={[StyleSheet.absoluteFill, styles.root]}>
-        <GradientPlane colorFront='#f20' colorBack='#a10'/>
-        <PomodoroTimerViewController
+        {/* <PomodoroTimerViewController
           style={styles.timer}
           countdownTimer={viewModel}
-          pomodoroState={viewModel}/>
+          pomodoroState={viewModel}/> */}
         <StepsCarousel style={styles.stateStepper} adapter={stepsAdapter}/>
     </View>
   );

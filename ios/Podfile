@@ -16,7 +16,7 @@ target 'PomodoroTimer' do
   # builds, this will lead to significantly slower build times.
   #
   # Note that if you have use_frameworks! enabled, Flipper will not work.
-  #
+  # pod 'OpenSSL-Universal', '~>1.0.2.20'
   # use_flipper!
   # post_install do |installer|
   #    flipper_post_install(installer)
