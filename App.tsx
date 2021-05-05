@@ -1,11 +1,12 @@
 import React, { ReactElement } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { color } from 'react-native-reanimated';
 import { interval } from 'rxjs';
 import CountdownTimer from './src/CountdownTimer';
 import PomodoroTimerViewController from './src/PomodoroTimerViewController';
 import PomodoroTimerViewModel from './src/PomodoroTimerViewModel';
 import ProfileStoreInterface from './src/ProfileStoreInterface';
-import StepsCarousel, { StepsCarouselAdapter } from './src/ui/StepsCarousel';
+import { Carousel, CarouselAdapter } from './src/ui/StepsCarousel';
 
 
 export default function App(){
@@ -27,33 +28,37 @@ export default function App(){
   const viewModel = new PomodoroTimerViewModel(store, timer);
 
   let progress = 0;
-  let statesCarousel:StepsCarousel|undefined;
-  let numSteps = 0
+  let position = 0;
   const steps = [
     {testID: 'step1', color:'#f0f'},
     {testID: 'step2', color:'#ff0'},
     {testID: 'step3', color:'#0ff'},
   ];
-  const stepsSequence = [steps[0], steps[1], steps[0], steps[2]];
-  const stepsAdapter = new class implements StepsCarouselAdapter{
-      getCurrentStepView(expectedWidth: number){ return this.getComponent(expectedWidth, this.getStep(numSteps)) }
-      getNextStepView(expectedWidth: number){ return this.getComponent(expectedWidth, this.getStep(numSteps + 1)) }
-      getStepProgress(){ return progress }
-      private getStep(idx: number){ return stepsSequence[idx%stepsSequence.length] }
-      private getComponent(width: number, data: any): ReactElement{
-          return <View testID={data.testID} style={{backgroundColor:data.color, width}}/>
-      }
-  }
+
+  const loopedSteps = [1, 2, 1, 3];
+  let adapter = new CarouselAdapter<number>();
+  adapter.onCreateView = (key, width) => {return <View
+    testID={'step'+key}
+    style={{backgroundColor:(key>0&&key<4)?steps[key-1].color:'#444', width}}
+  />};
+  adapter.onFetchKeyCurrent = () => loopedSteps[position%loopedSteps.length];
+  adapter.onFetchKeyFollowing = () => loopedSteps[(position+1)%loopedSteps.length];
+  adapter.onFetchProgress = () => progress;
+  adapter.onUserMovedNext = (keySkipped, keySelected) => {
+      position++;
+      progress = 0;
+      adapter.update();
+  };
 
   // debug code
   interval(10).subscribe(() => {
-    progress+=0.005
+    progress+=0.005;
     if(progress >= 1){
-      progress = 0
-      numSteps = ++numSteps%4
-      statesCarousel?.updateSteps()
+      progress = 0;
+      position = ++position%4;
     }
-  })
+    adapter.update();
+  });
 
   return (
     <View style={[StyleSheet.absoluteFill, styles.root]}>
@@ -61,7 +66,7 @@ export default function App(){
           style={styles.timer}
           countdownTimer={viewModel}
           pomodoroState={viewModel}/> */}
-        <StepsCarousel style={styles.stateStepper} adapter={stepsAdapter}/>
+        <Carousel style={styles.stateStepper} adapter={adapter}/>
     </View>
   );
 }
