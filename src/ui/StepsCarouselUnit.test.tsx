@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { fireEvent, render } from '@testing-library/react-native';
 import { act, ReactTestInstance } from "react-test-renderer";
 import { findAnyByProps } from '../utils/TestingUtils';
-import { Carousel, CarouselAdapter } from './StepsCarousel';
+import { StepsCarousel, StepsCarouselAdapter } from './StepsCarousel';
 
 
 describe('StepsCarousel', ()=>{
@@ -15,7 +15,7 @@ describe('StepsCarousel', ()=>{
     it('test steps adapter', async ()=>{
         var progress = 0;
         var position = 0;
-        let adapter = new CarouselAdapter<string>();
+        let adapter = new StepsCarouselAdapter<string>();
         adapter.onCreateView = key => getStepViewFor(key);
         adapter.onFetchKeyCurrent = () => getStepKeyAt(position);
         adapter.onFetchKeyFollowing = () => getStepKeyAt(position + 1);
@@ -62,7 +62,7 @@ describe('StepsCarousel', ()=>{
         const height = 100;
         var progress = 0;
         var position = 0;
-        let adapter = new CarouselAdapter<string>();
+        let adapter = new StepsCarouselAdapter<string>();
         adapter.onCreateView = key => getStepViewFor(key);
         adapter.onFetchKeyCurrent = () => getStepKeyAt(position);
         adapter.onFetchKeyFollowing = () => getStepKeyAt(position + 1);
@@ -73,7 +73,7 @@ describe('StepsCarousel', ()=>{
             adapter.update();
         };
 
-        let ren = render(<Carousel
+        let ren = render(<StepsCarousel
             style={{width, height}}
             adapter={adapter}
         />);

@@ -1,12 +1,12 @@
 import React, { ReactElement } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { color } from 'react-native-reanimated';
+import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { interval } from 'rxjs';
 import CountdownTimer from './src/CountdownTimer';
+import { PomodoroState } from './src/PomodoroStateChangeInterface';
 import PomodoroTimerViewController from './src/PomodoroTimerViewController';
 import PomodoroTimerViewModel from './src/PomodoroTimerViewModel';
 import ProfileStoreInterface from './src/ProfileStoreInterface';
-import { Carousel, CarouselAdapter } from './src/ui/StepsCarousel';
+import { StepsCarousel, StepsCarouselAdapter } from './src/ui/StepsCarousel';
 
 
 export default function App(){
@@ -30,19 +30,24 @@ export default function App(){
   let progress = 0;
   let position = 0;
   const steps = [
-    {testID: 'step1', color:'#f0f'},
-    {testID: 'step2', color:'#ff0'},
-    {testID: 'step3', color:'#0ff'},
+    PomodoroState.Work,
+    PomodoroState.Break,
+    PomodoroState.Work,
+    PomodoroState.Recess,
   ];
 
-  const loopedSteps = [1, 2, 1, 3];
-  let adapter = new CarouselAdapter<number>();
-  adapter.onCreateView = (key, width) => {return <View
-    testID={'step'+key}
-    style={{backgroundColor:(key>0&&key<4)?steps[key-1].color:'#444', width}}
-  />};
-  adapter.onFetchKeyCurrent = () => loopedSteps[position%loopedSteps.length];
-  adapter.onFetchKeyFollowing = () => loopedSteps[(position+1)%loopedSteps.length];
+  const getStateCurrent = ()=>{
+    return viewModel.getStateTitle(steps[position % steps.length]);
+  };
+
+  const getStateFollowing = ()=>{
+    return viewModel.getStateTitle(steps[(position + 1) % steps.length]);
+  };
+
+  let adapter = new StepsCarouselAdapter<string>();
+  adapter.onCreateView = (key, width) => getItemView(key, width);
+  adapter.onFetchKeyCurrent = () => getStateCurrent();
+  adapter.onFetchKeyFollowing = () => getStateFollowing();
   adapter.onFetchProgress = () => progress;
   adapter.onUserMovedNext = (keySkipped, keySelected) => {
       position++;
@@ -52,7 +57,7 @@ export default function App(){
 
   // debug code
   interval(10).subscribe(() => {
-    progress+=0.005;
+    progress+=0.002;
     if(progress >= 1){
       progress = 0;
       position = ++position%4;
@@ -61,14 +66,31 @@ export default function App(){
   });
 
   return (
-    <View style={[StyleSheet.absoluteFill, styles.root]}>
-        {/* <PomodoroTimerViewController
-          style={styles.timer}
-          countdownTimer={viewModel}
-          pomodoroState={viewModel}/> */}
-        <Carousel style={styles.stateStepper} adapter={adapter}/>
-    </View>
+    <SafeAreaView style={[StyleSheet.absoluteFill, styles.root]}>
+      {/* <PomodoroTimerViewController
+        style={styles.timer}
+        countdownTimer={viewModel}
+        pomodoroState={viewModel}/> */}
+      <StepsCarousel
+        style={styles.carousel}
+        adapter={adapter}
+      />
+    </SafeAreaView>
   );
+}
+
+function getItemView(title:string, width:number): ReactElement {
+  return <View style={{
+    justifyContent: 'center',
+    height: '100%',
+    width,
+  }}>
+    <Text style={{
+      fontSize: 64,
+      textAlign: 'center',
+      color: '#fff',
+    }}>{title}</Text>
+  </View>
 }
 
 const styles = StyleSheet.create({
@@ -77,21 +99,16 @@ const styles = StyleSheet.create({
     flexDirection:'row',
     justifyContent:'center',
     alignItems:'center',
-    
     backgroundColor: '#555',
     position:'relative',
   },
-  timer: {
-    zIndex: 1,
-    position:'absolute',
-    alignSelf:'center',
+  carousel:{
+    height:64,
+    alignSelf:'flex-start'
   },
-  stateStepper:{
-    height:96,
-    width:360,
-
-    position:'relative',
-    // marginTop:24,
-    // alignSelf:'flex-start',
-  }
+//   timer: {
+//     zIndex: 1,
+//     position:'absolute',
+//     alignSelf:'center',
+//   },
 });

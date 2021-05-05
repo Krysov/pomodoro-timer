@@ -1,7 +1,7 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { ViewProps, ScrollView } from "react-native";
 
-export const Carousel = (props: CarouselProps) => {
+export const StepsCarousel = (props: StepsCarouselProps) => {
     const adapter = props.adapter;
     const scrollView = useRef<ScrollView|null>(null);
 
@@ -24,21 +24,24 @@ export const Carousel = (props: CarouselProps) => {
         setKeyLeft(adapter.onFetchKeyCurrent?.());
         setKeyRight(adapter.onFetchKeyFollowing?.());
     };
+
+    let isTriggeringMoveNext = (withOffsetX: number)=>{
+        return (withOffsetX / 0.75) >= width;
+    }
     
     return <ScrollView
         testID={'idCarousellScroll'}
         horizontal={true}
-        style={[props.style]}
+        style={props.style}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
         pagingEnabled={false}
         ref={scrollView}
-        onScrollBeginDrag={event => setIsDragging(true)}
+        onScrollBeginDrag={() => setIsDragging(true)}
         onScrollEndDrag={event => {
             setIsDragging(false);
-            let isTriggeringNextItem =
-                event.nativeEvent.contentOffset.x > (width*0.75);
-            if(isTriggeringNextItem) adapter.onUserMovedNext?.(keyLeft, keyRight);
+            if(isTriggeringMoveNext(event.nativeEvent.contentOffset.x))
+                adapter.onUserMovedNext?.(keyLeft, keyRight);
         }}
         onLayout={event => setWidth(event.nativeEvent.layout.width)}>
             {adapter.getViewCurrent?.(width)}
@@ -46,11 +49,11 @@ export const Carousel = (props: CarouselProps) => {
         </ScrollView>;
 };
 
-export interface CarouselProps extends ViewProps{
-    adapter: CarouselAdapter<any>;
+export interface StepsCarouselProps extends ViewProps{
+    adapter: StepsCarouselAdapter<any>;
 }
 
-export class CarouselAdapter<ItemKey>{
+export class StepsCarouselAdapter<ItemKey>{
     onCreateView?: (key: ItemKey, width: number) => ReactElement;
     onFetchKeyCurrent?: () => ItemKey;
     onFetchKeyFollowing?: () => ItemKey;
