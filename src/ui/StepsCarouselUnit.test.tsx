@@ -1,9 +1,10 @@
-import React, { ReactElement, useRef } from 'react';
+import React, { ReactElement } from 'react';
 import { View } from 'react-native';
-import TestRenderer, { act } from 'react-test-renderer';
-import { fireEvent } from '@testing-library/react-native';
-import { Carousel, CarouselAdapter } from './StepsCarousel';
+import { fireEvent, render } from '@testing-library/react-native';
+import { act, ReactTestInstance } from "react-test-renderer";
 import { findAnyByProps } from '../utils/TestingUtils';
+import { Carousel, CarouselAdapter } from './StepsCarousel';
+
 
 describe('StepsCarousel', ()=>{
 
@@ -36,17 +37,17 @@ describe('StepsCarousel', ()=>{
         expect((adapter as any).getViewFollowing()).toBe(step1);
         expect(Math.trunc(adapter.onFetchProgress()*10)).toBe(5);
 
-        const onTriggerNext = jest.fn((skipped, selected:string)=>{
+        adapter.update = jest.fn(adapter.update);
+        const onTriggerNext = jest.fn((skipped:string, selected:string)=>{
             expect(skipped).toBe(getStepKeyAt(position));
             expect(selected).toBe(getStepKeyAt(position + 1));
             position++;
             progress = 0;
             adapter.update();
         })
-        adapter.onUserMovedNext = (keySkipped, keySelected) => onTriggerNext;
-        adapter.update = jest.fn(() => adapter.update());
+        adapter.onUserMovedNext = onTriggerNext;
 
-        // todo: trigger and await onUserMovedNext
+        adapter.onUserMovedNext('keyStep3', 'keyStep1');
         expect(onTriggerNext).toBeCalledTimes(1);
         expect(adapter.update).toBeCalledTimes(1);
         expect(adapter.onFetchKeyCurrent()).toBe('keyStep1');
@@ -72,37 +73,39 @@ describe('StepsCarousel', ()=>{
             adapter.update();
         };
 
-        let ren = await TestRenderer.create(<Carousel
+        let ren = render(<Carousel
             style={{width, height}}
             adapter={adapter}
         />);
-        let carousel = ren.root
+        let carousel = ren.getByTestId('idCarousellScroll')
 
         expect(findAnyByProps(carousel, {'testID': 'idStep1'})).not.toBeNull();
         expect(findAnyByProps(carousel, {'testID': 'idStep2'})).not.toBeNull();
         expect(findAnyByProps(carousel, {'testID': 'idStep3'})).toBeNull();
 
         position = 2;
-        await act(() => adapter.update());
+        await act(async () => adapter.update());
         expect(findAnyByProps(carousel, {'testID': 'idStep1'})).not.toBeNull();
         expect(findAnyByProps(carousel, {'testID': 'idStep2'})).toBeNull();
         expect(findAnyByProps(carousel, {'testID': 'idStep3'})).not.toBeNull();
 
         position = 3;
-        await act(() => adapter.update());
-        // todo: send event user begin drag
-        // todo: send event user move left
-        // todo: send event user stops drag
+        await act(async () => adapter.update());
+        scroll(carousel, 10);
+        expect(findAnyByProps(carousel, {'testID': 'idStep1'})).not.toBeNull();
+        expect(findAnyByProps(carousel, {'testID': 'idStep2'})).toBeNull();
+        expect(findAnyByProps(carousel, {'testID': 'idStep3'})).not.toBeNull();
+        scroll(carousel, width);
         expect(findAnyByProps(carousel, {'testID': 'idStep1'})).not.toBeNull();
         expect(findAnyByProps(carousel, {'testID': 'idStep2'})).not.toBeNull();
         expect(findAnyByProps(carousel, {'testID': 'idStep3'})).toBeNull();
 
         jest.useFakeTimers();
         position = 3;
-        await act(() => adapter.update());
-        // todo: send event user begin drag
+        await act(async () => adapter.update());
+        fireEvent(carousel, 'onScrollBeginDrag', {});
         position = 0;
-        await act(() => adapter.update());
+        await act(async () => adapter.update());
 
         // skip animation test
         // expect(findAnyByProps(carousel, {'testID': 'idStep1'})).not.toBeNull();
@@ -133,6 +136,18 @@ describe('StepsCarousel', ()=>{
             ['keyStep3', step3],
         ])
         return map.get(key)!;
+    }
+
+    function scroll(instance: ReactTestInstance, byX:number){
+        const eventData = {
+            nativeEvent: {
+              contentOffset: {
+                x: byX,
+              },
+            },
+        };
+        fireEvent(instance, 'onScrollBeginDrag', {});
+        fireEvent(instance, 'onScrollEndDrag', eventData);
     }
 
 });

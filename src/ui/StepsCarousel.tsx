@@ -1,18 +1,24 @@
-import React, { LegacyRef, ReactElement, useEffect, useRef, useState } from 'react';
-import { ViewProps, ScrollView, View } from "react-native";
+import React, { ReactElement, useEffect, useRef, useState } from 'react';
+import { ViewProps, ScrollView } from "react-native";
 
 export const Carousel = (props: CarouselProps) => {
     const adapter = props.adapter;
     const scrollView = useRef<ScrollView|null>(null);
 
-    const [width, setWidth] = useState(0);
+    const [width, setWidth] = useState(props.style?.width ?? 0);
     const [offsetX, setOffsetX] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
     const [keyLeft, setKeyLeft] = useState(adapter.onFetchKeyCurrent?.());
     const [keyRight, setKeyRight] = useState(adapter.onFetchKeyFollowing?.());
     
     useEffect(()=>{
-        scrollView.current?.scrollTo({x:offsetX * width, animated: false})
-    }, [width, offsetX, keyLeft, keyRight])
+        if(!isDragging) scrollView.current?.scrollTo(
+            {x: offsetX * width, animated: false});
+    }, [width, offsetX, keyLeft, keyRight, isDragging]);
+    useEffect(()=>{
+        setIsDragging(false);
+    }, [keyLeft, keyRight]);
+
     adapter.onUpdate = () => {
         setOffsetX(adapter.onFetchProgress?.() ?? 0);
         setKeyLeft(adapter.onFetchKeyCurrent?.());
@@ -20,15 +26,21 @@ export const Carousel = (props: CarouselProps) => {
     };
     
     return <ScrollView
+        testID={'idCarousellScroll'}
         horizontal={true}
-        style={props.style}
+        style={[props.style]}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={true}
         pagingEnabled={false}
         ref={scrollView}
-        onLayout={event => setWidth(event.nativeEvent.layout.width)}
-        >
+        onScrollBeginDrag={event => setIsDragging(true)}
+        onScrollEndDrag={event => {
+            setIsDragging(false);
+            let isTriggeringNextItem =
+                event.nativeEvent.contentOffset.x > (width*0.75);
+            if(isTriggeringNextItem) adapter.onUserMovedNext?.(keyLeft, keyRight);
+        }}
+        onLayout={event => setWidth(event.nativeEvent.layout.width)}>
             {adapter.getViewCurrent?.(width)}
             {adapter.getViewFollowing?.(width)}
         </ScrollView>;
