@@ -1,29 +1,15 @@
-import React from 'react';
+import React, { RefObject, useRef } from 'react';
 import { render, cleanup } from '@testing-library/react-native';
 import JestUnitHandler from '../utils/TestingUtils';
-import GradientPlane, {RadialGradientColors} from "./GradientPlane";
+import GradientPlane, {getGradientTransition, GradientTransition, GradientTransitionType, SetGradient} from "./GradientPlane";
 import { Milliseconds } from '../TimeFormats';
-import { Surface } from '../../__mocks__/GLReact.mocks';
-// import { GLView } from '../../__mocks__/GLView.mocks';
-
-
+import { act } from 'react-test-renderer';
 
 
 describe('GradientPlane', ()=>{
 
     const jestHandler = new JestUnitHandler(true);
     const animationDuration: Milliseconds = 1000;
-
-    beforeAll(async ()=>{
-        // jest.mock('expo-gl', () => 'GLView');
-        // jest.mock('expo-gl', () => 'NativeView');
-        // jest.mock('gl-react', () => 'Node');
-        // jest.mock('gl-react', () => 'Shaders');
-        // jest.mock('gl-react', () => 'GLSL');
-        // jest.mock('gl-react-native', () => 'Surface');
-        // GLView
-        // Surface
-    })
 
     beforeEach(async ()=>{
         jestHandler.beginUnitTest();
@@ -34,24 +20,56 @@ describe('GradientPlane', ()=>{
         cleanup();
     });
 
-    it('set colors', async ()=>{
-        const startupColors: RadialGradientColors = {colorFront:'#444', colorBack:'#000'};
-        const initialColors: RadialGradientColors = {colorFront:'#f00', colorBack:'#800'};
-        const nextColors: RadialGradientColors = {colorFront:'#00f', colorBack:'#008'};
+    it('test gradient transition', async ()=>{
+        const initialColors = getGradientTransition('#f00', '#800');
+        const nextColors = getGradientTransition('#00f', '#008');
+        let setGradient = new SetGradient()
         const vc = <GradientPlane
-            startupAnimationFromColors={startupColors}
-            initialColors={initialColors}
-            colorsTransitionAnimationDuration={animationDuration}
+            colorInner={'#444'}
+            colorOuter={'#000'}
+            setGradient={setGradient}
         />;
-        const ren = render(vc);
-        const root = ren.container;
-        expect(root.instance.state.colors).toBe(startupColors);
-        await jestHandler.delay(animationDuration);
-        expect(root.instance.state.colors).toBe(initialColors);
-        root.instance.setColors(nextColors);
+        render(vc);
+        expect(setGradient.getGradient()).toStrictEqual({
+            colorInner:[0x44, 0x44, 0x44],
+            colorOuter:[0x00, 0x00, 0x00],
+        });
+        
+        act(()=>setGradient.setGradient(getGradientTransition('#ff0', '#440',
+            GradientTransitionType.Instant, 0)));
+        expect(setGradient.getGradient()).toStrictEqual({
+            colorInner:[0xff, 0xff, 0x00],
+            colorOuter:[0x44, 0x44, 0x00],
+        });
+
+        act(()=>setGradient.setGradient(getGradientTransition('#0ff', '#044',
+            GradientTransitionType.DirectFade, animationDuration)));
         await jestHandler.delay(animationDuration/2);
-        expect(root.instance.state.colors).toBe({colorFront:'#808', colorBack:'#404'});
+        expect(setGradient.getGradient()).toStrictEqual({
+            colorInner:[0x88, 0xff, 0x88],
+            colorOuter:[0x22, 0x44, 0x22],
+        });
         await jestHandler.delay(animationDuration/2);
-        expect(root.instance.state.colors).toBe(nextColors);
+        expect(setGradient.getGradient()).toStrictEqual({
+            colorInner:[0x00, 0xff, 0xff],
+            colorOuter:[0x00, 0x44, 0x44],
+        });
+        
+        act(()=>setGradient.setGradient(getGradientTransition('#ff0', '#440',
+            GradientTransitionType.OutInSwap, animationDuration)));
+        await jestHandler.delay(animationDuration/2);
+        expect(setGradient.getGradient()).toStrictEqual({
+            colorInner:[0x88, 0xff, 0x88],
+            colorOuter:[0x22, 0x44, 0x22],
+        });
+        await jestHandler.delay(animationDuration/2);
+        expect(setGradient.getGradient()).toStrictEqual({
+            colorInner:[0x00, 0xff, 0xff],
+            colorOuter:[0x00, 0x44, 0x44],
+        });
     });
+
+    function parseToHexArray(input:Array<number>){
+        input.map(n => Math.trunc(n * 255.));
+    }
 });
