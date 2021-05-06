@@ -1,7 +1,6 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
-import { ColorValue, StyleSheet } from "react-native";
+import React, { useRef, useState } from 'react';
+import { ColorValue, ViewProps } from "react-native";
 import { Shaders, Node, GLSL } from "gl-react";
-import { Surface } from "gl-react-native";
 import { parseToRgba } from 'color2k';
 import { Milliseconds } from '../TimeFormats';
 
@@ -9,20 +8,17 @@ export default function GradientPlane(props: RadialGradientProps){
     useRef
     const [colors, setColors] = useState(props.initialColors);
     const [gradientDimen, setGradientDimen] = useState([0.5, -0.4, 1.8]);
-    // useLayoutEffect
-    return <Surface style={StyleSheet.absoluteFill}>
-        <Node
-            shader={shaders.radialGradient}
-            uniforms={{
-                gColFront: toRGB(colors.colorFront),
-                gColBack: toRGB(colors.colorBack),
-                gPosRad: gradientDimen,
-                noiseMap: {uri:'https://i.stack.imgur.com/plUPA.jpg'}
-        }}/>
-    </Surface>
+    return <Node
+        shader={shaders.radialGradient}
+        uniforms={{
+            gColFront: toRGB(colors.colorFront),
+            gColBack: toRGB(colors.colorBack),
+            gPosRad: gradientDimen,
+            noiseMap: {uri:'https://i.stack.imgur.com/plUPA.jpg'}
+    }}/>
 }
 
-export type RadialGradientProps = {
+export interface RadialGradientProps extends ViewProps {
     initialColors: RadialGradientColors;
     startupAnimationFromColors?: RadialGradientColors;
     gradientGrainMapUri?: string;
