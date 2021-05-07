@@ -100,23 +100,14 @@ describe('StepsCarousel', ()=>{
         expect(findAnyByProps(carousel, {'testID': 'idStep2'})).not.toBeNull();
         expect(findAnyByProps(carousel, {'testID': 'idStep3'})).toBeNull();
 
-        jest.useFakeTimers();
         position = 3;
         await act(async () => adapter.update());
         fireEvent(carousel, 'onScrollBeginDrag', {});
         position = 0;
         await act(async () => adapter.update());
-
-        // skip animation test
-        // expect(findAnyByProps(carousel, {'testID': 'idStep1'})).not.toBeNull();
-        // expect(findAnyByProps(carousel, {'testID': 'idStep2'})).toBeNull();
-        // expect(findAnyByProps(carousel, {'testID': 'idStep3'})).not.toBeNull();
-        // await jest.advanceTimersByTime(1000);
-
         expect(findAnyByProps(carousel, {'testID': 'idStep1'})).not.toBeNull();
         expect(findAnyByProps(carousel, {'testID': 'idStep2'})).not.toBeNull();
         expect(findAnyByProps(carousel, {'testID': 'idStep3'})).toBeNull();
-        jest.useRealTimers();
     });
 
     function getStepKeyAt(i:number): string {
