@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ColorValue, ViewProps } from "react-native";
 import { Shaders, Node, GLSL } from "gl-react";
 import { parseToRgba } from 'color2k';
-import { Milliseconds } from '../TimeFormats';
+
 
 export default function RadialGradientBackdrop(props: GradientBackdrop.BackdropProps){
     const [values, setValues] = useState(getGradientValues(
@@ -100,10 +100,6 @@ function getGradientValues(
     }
 }
 
-function lerp(a: typeof getGradientValues, b: typeof getGradientValues){
-    // todo: impl
-}
-
 function toRGB(color: ColorValue): [number,number,number]{
     let rgb = parseToRgba(color as string);
     return [rgb[0]/255., rgb[1]/255., rgb[2]/255.];
@@ -138,9 +134,6 @@ const shaders = Shaders.create({
     }
 });
 
-const DefaultTransitionDuration: Milliseconds = 333;
 const DefaultGradientPosX = 0.5;
 const DefaultGradientPosY = -0.4;
-const LoweredGradientPosY = -0.6;
 const DefaultGradientRadius = 1.8;
-const LoweredGradientRadius = 0.8;
