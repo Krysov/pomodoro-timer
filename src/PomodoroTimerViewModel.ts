@@ -78,6 +78,14 @@ export default class PomodoroTimerViewModel implements
         );
     }
 
+    getStateTitle(state: PomodoroState): string {
+        switch(state){
+            case PomodoroState.Work: return 'Work';
+            case PomodoroState.Break: return 'Break';
+            case PomodoroState.Recess: return 'Recess';
+        }
+    }
+
     onTimerUpdate(): Observable<PomodoroTimerViewModel> {
         return this._onTimerUpdateSubject;
     }
