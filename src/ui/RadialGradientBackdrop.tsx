@@ -4,18 +4,17 @@ import { Shaders, Node, GLSL } from "gl-react";
 import { parseToRgba } from 'color2k';
 import { Milliseconds } from '../TimeFormats';
 
-
-export default function GradientPlane(props: RadialGradientProps){
-    const [values, setValues] = useState(GradientValues(
+export default function RadialGradientBackdrop(props: GradientBackdrop.BackdropProps){
+    const [values, setValues] = useState(getGradientValues(
         ...toRGB(props.colorInner),
         ...toRGB(props.colorOuter),
     ));
     const [transition, setTransition] = useState(
-        getGradientTransition(props.colorInner, props.colorOuter)
+        GradientBackdrop.getGradientTransition(props.colorInner, props.colorOuter)
     );
     const [animation, setAnimation] = useState(1);
     useEffect(()=>{
-        setValues(GradientValues(
+        setValues(getGradientValues(
             ...toRGB(transition.targetColorInner),
             ...toRGB(transition.targetColorOuter),
         ));
@@ -50,48 +49,50 @@ export default function GradientPlane(props: RadialGradientProps){
     }}/>
 }
 
-export class SetGradient{
-    setGradient(gradient:GradientTransition){
-        throw Error('The instance must be passed to a GradientPlane before use!');
+export namespace GradientBackdrop{
+    export function getGradientTransition(
+        targetColorInner: ColorValue, targetColorOuter: ColorValue,
+        transitionType: GradientTransitionType = GradientTransitionType.Instant,
+        transitionDuration: Milliseconds = DefaultTransitionDuration,
+        ){
+        return {
+            targetColorInner,
+            targetColorOuter,
+            transitionType,
+            transitionDuration,
+        } as GradientTransition;
     }
-    getGradient():{colorInner:number[], colorOuter:number[]}{
-        throw Error('The instance must be passed to a GradientPlane before use!');
+
+    export interface GradientTransition{
+        targetColorInner: ColorValue;
+        targetColorOuter: ColorValue;
+        transitionType?: GradientTransitionType;
+        transitionDuration?: Milliseconds;
+    }
+
+    export enum GradientTransitionType{
+        Instant,
+        DirectFade,
+        OutInSwap,
+    }
+
+    export interface BackdropProps extends ViewProps {
+        readonly colorInner: ColorValue;
+        readonly colorOuter: ColorValue;
+        readonly setGradient?: BackdropRemote;
+    }
+
+    export class BackdropRemote{
+        setGradient(gradient:GradientTransition){
+            throw Error('The instance must be passed to a GradientPlane before use!');
+        }
+        getGradient():{colorInner:number[], colorOuter:number[]}{
+            throw Error('The instance must be passed to a GradientPlane before use!');
+        }
     }
 }
 
-export interface RadialGradientProps extends ViewProps {
-    readonly colorInner: ColorValue;
-    readonly colorOuter: ColorValue;
-    readonly setGradient?: SetGradient;
-}
-
-export enum GradientTransitionType{
-    Instant,
-    DirectFade,
-    OutInSwap,
-}
-
-export interface GradientTransition{
-    targetColorInner: ColorValue;
-    targetColorOuter: ColorValue;
-    transitionType?: GradientTransitionType;
-    transitionDuration?: Milliseconds;
-}
-
-export function getGradientTransition(
-    targetColorInner: ColorValue, targetColorOuter: ColorValue,
-    transitionType: GradientTransitionType = GradientTransitionType.Instant,
-    transitionDuration: Milliseconds = DefaultTransitionDuration,
-    ){
-    return {
-        targetColorInner,
-        targetColorOuter,
-        transitionType,
-        transitionDuration,
-    } as GradientTransition;
-}
-
-function GradientValues(
+function getGradientValues(
     colorInnerR: number,
     colorInnerG: number,
     colorInnerB: number,
@@ -115,7 +116,7 @@ function GradientValues(
     }
 }
 
-function lerp(a: typeof GradientValues, b: typeof GradientValues){
+function lerp(a: typeof getGradientValues, b: typeof getGradientValues){
     // todo: impl
 }
 

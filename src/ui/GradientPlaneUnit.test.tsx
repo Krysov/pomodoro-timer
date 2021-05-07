@@ -1,7 +1,7 @@
-import React, { RefObject, useRef } from 'react';
+import React from 'react';
 import { render, cleanup } from '@testing-library/react-native';
 import JestUnitHandler from '../utils/TestingUtils';
-import GradientPlane, {getGradientTransition, GradientTransition, GradientTransitionType, SetGradient} from "./GradientPlane";
+import RadialGradientBackdrop, { GradientBackdrop } from "./RadialGradientBackdrop";
 import { Milliseconds } from '../TimeFormats';
 import { act } from 'react-test-renderer';
 
@@ -21,10 +21,10 @@ describe('GradientPlane', ()=>{
     });
 
     it('test gradient transition', async ()=>{
-        const initialColors = getGradientTransition('#f00', '#800');
-        const nextColors = getGradientTransition('#00f', '#008');
-        let setGradient = new SetGradient()
-        const vc = <GradientPlane
+        const initialColors = GradientBackdrop.getGradientTransition('#f00', '#800');
+        const nextColors = GradientBackdrop.getGradientTransition('#00f', '#008');
+        let setGradient = new GradientBackdrop.BackdropRemote()
+        const vc = <RadialGradientBackdrop
             colorInner={'#444'}
             colorOuter={'#000'}
             setGradient={setGradient}
@@ -35,15 +35,15 @@ describe('GradientPlane', ()=>{
             colorOuter:[0x00, 0x00, 0x00],
         });
         
-        act(()=>setGradient.setGradient(getGradientTransition('#ff0', '#440',
-            GradientTransitionType.Instant, 0)));
+        act(()=>setGradient.setGradient(GradientBackdrop.getGradientTransition('#ff0', '#440',
+            GradientBackdrop.GradientTransitionType.Instant, 0)));
         expect(setGradient.getGradient()).toStrictEqual({
             colorInner:[0xff, 0xff, 0x00],
             colorOuter:[0x44, 0x44, 0x00],
         });
 
-        act(()=>setGradient.setGradient(getGradientTransition('#0ff', '#044',
-            GradientTransitionType.DirectFade, animationDuration)));
+        act(()=>setGradient.setGradient(GradientBackdrop.getGradientTransition('#0ff', '#044',
+            GradientBackdrop.GradientTransitionType.DirectFade, animationDuration)));
         await jestHandler.delay(animationDuration/2);
         expect(setGradient.getGradient()).toStrictEqual({
             colorInner:[0x88, 0xff, 0x88],
@@ -55,8 +55,8 @@ describe('GradientPlane', ()=>{
             colorOuter:[0x00, 0x44, 0x44],
         });
         
-        act(()=>setGradient.setGradient(getGradientTransition('#ff0', '#440',
-            GradientTransitionType.OutInSwap, animationDuration)));
+        act(()=>setGradient.setGradient(GradientBackdrop.getGradientTransition('#ff0', '#440',
+            GradientBackdrop.GradientTransitionType.OutInSwap, animationDuration)));
         await jestHandler.delay(animationDuration/2);
         expect(setGradient.getGradient()).toStrictEqual({
             colorInner:[0x88, 0xff, 0x88],

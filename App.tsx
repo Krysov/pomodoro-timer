@@ -1,13 +1,13 @@
 import { Surface } from 'gl-react-native';
 import React from 'react';
 import { Button, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import GradientPlane, { getGradientTransition, SetGradient } from './src/ui/GradientPlane';
+import RadialGradientBackdrop, { GradientBackdrop } from './src/ui/RadialGradientBackdrop';
 
 export default function App() {
-  let setGradient = new SetGradient()
+  let setGradient = new GradientBackdrop.BackdropRemote()
   return <View style={StyleSheet.absoluteFill}>
     <Surface style={StyleSheet.absoluteFill}>
-      <GradientPlane
+      <RadialGradientBackdrop
         colorInner={'#444'}
         colorOuter={'#222'}
         setGradient={setGradient}
@@ -15,7 +15,7 @@ export default function App() {
     </Surface>
     <SafeAreaView>
       <Button title={'change'} onPress={()=>{
-        setGradient.setGradient(getGradientTransition('#f40', '#420'));
+        setGradient.setGradient(GradientBackdrop.getGradientTransition('#f40', '#420'));
       }}/>
     </SafeAreaView>
   </View>
