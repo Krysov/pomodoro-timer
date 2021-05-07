@@ -12,16 +12,14 @@ export default function RadialGradientBackdrop(props: GradientBackdrop.BackdropP
     const [transition, setTransition] = useState(
         GradientBackdrop.getGradientTransition(props.colorInner, props.colorOuter)
     );
-    const [animation, setAnimation] = useState(1);
     useEffect(()=>{
         setValues(getGradientValues(
             ...toRGB(transition.targetColorInner),
             ...toRGB(transition.targetColorOuter),
         ));
-        // todo: trigger animation
     }, [transition]);
     useEffect(()=>{
-    }, [values, animation]);
+    }, [values]);
 
     if(props.setGradient){
         props.setGradient.setGradient = gradient => {setTransition(gradient)}
@@ -45,35 +43,21 @@ export default function RadialGradientBackdrop(props: GradientBackdrop.BackdropP
             gColInner: [values.colorInnerR, values.colorInnerG, values.colorInnerB],
             gColOuter: [values.colorOuterR, values.colorOuterG, values.colorOuterB],
             gPosRad: [values.gradientPosX, values.gradientPosY, values.gradientRadius],
-            noiseMap: {uri:'https://i.stack.imgur.com/plUPA.jpg'}
     }}/>
 }
 
 export namespace GradientBackdrop{
     export function getGradientTransition(
-        targetColorInner: ColorValue, targetColorOuter: ColorValue,
-        transitionType: GradientTransitionType = GradientTransitionType.Instant,
-        transitionDuration: Milliseconds = DefaultTransitionDuration,
-        ){
+        targetColorInner: ColorValue, targetColorOuter: ColorValue){
         return {
             targetColorInner,
             targetColorOuter,
-            transitionType,
-            transitionDuration,
         } as GradientTransition;
     }
 
     export interface GradientTransition{
         targetColorInner: ColorValue;
         targetColorOuter: ColorValue;
-        transitionType?: GradientTransitionType;
-        transitionDuration?: Milliseconds;
-    }
-
-    export enum GradientTransitionType{
-        Instant,
-        DirectFade,
-        OutInSwap,
     }
 
     export interface BackdropProps extends ViewProps {
@@ -133,8 +117,6 @@ const glslFragmentShader = GLSL`
 precision lowp float;
 varying vec2 uv;
 
-uniform sampler2D noiseMap;
-
 // radial gradient colors
 uniform vec3 gColInner;
 uniform vec3 gColOuter;
@@ -146,7 +128,6 @@ uniform vec3 gPosRad;
 void main()
 {
     float blend = clamp(distance(uv, gPosRad.xy) / gPosRad.z, 0., 1.);
-    blend += texture2D(noiseMap, uv).x*0.1-0.05;
     gl_FragColor = vec4(mix(gColInner, gColOuter, blend), 1.);
 }
 `;
