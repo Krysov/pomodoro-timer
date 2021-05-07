@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ColorValue, ViewProps } from "react-native";
+import { ColorValue, ViewProps, View, Image } from "react-native";
 import { Shaders, Node, GLSL } from "gl-react";
 import { parseToRgba } from 'color2k';
 import { Milliseconds } from '../TimeFormats';
+import noiseMap from '../../app/assets/noise_map.jpg'
 
 export default function RadialGradientBackdrop(props: GradientBackdrop.BackdropProps){
     const [values, setValues] = useState(getGradientValues(
@@ -12,6 +13,7 @@ export default function RadialGradientBackdrop(props: GradientBackdrop.BackdropP
     const [transition, setTransition] = useState(
         GradientBackdrop.getGradientTransition(props.colorInner, props.colorOuter)
     );
+    const [dimen, setDimen] = useState({width:1, height:1});
     const [animation, setAnimation] = useState(1);
     useEffect(()=>{
         setValues(getGradientValues(
@@ -38,15 +40,16 @@ export default function RadialGradientBackdrop(props: GradientBackdrop.BackdropP
             ]),
         }}
     }
-    
-    return <Node
-        shader={shaders.radialGradient}
-        uniforms={{
-            gColInner: [values.colorInnerR, values.colorInnerG, values.colorInnerB],
-            gColOuter: [values.colorOuterR, values.colorOuterG, values.colorOuterB],
-            gPosRad: [values.gradientPosX, values.gradientPosY, values.gradientRadius],
-            noiseMap: {uri:'https://i.stack.imgur.com/plUPA.jpg'}
-    }}/>
+    return <View onLayout={e => {setDimen(e.nativeEvent.layout)}}>
+        <Node
+            shader={shaders.radialGradient}
+            uniforms={{
+                gColInner: [values.colorInnerR, values.colorInnerG, values.colorInnerB],
+                gColOuter: [values.colorOuterR, values.colorOuterG, values.colorOuterB],
+                gPosRad: [values.gradientPosX, values.gradientPosY, values.gradientRadius],
+                noiseMap: {uri:Image.resolveAssetSource(noiseMap)}
+        }}/>
+    </View>
 }
 
 export namespace GradientBackdrop{

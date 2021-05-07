@@ -11,7 +11,7 @@ module.exports = {
   resolver: {
     assetExts: [
       ...defaultAssetExts,
-      'wasm',
+      'jpg',
     ]
   }
 };

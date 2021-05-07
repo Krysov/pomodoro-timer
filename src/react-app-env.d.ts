@@ -1,5 +1,4 @@
 /// <reference types="react-scripts" />
 
-declare module "*.wasm" {}
-
+declare module "*.jpg" {}
 declare module "*.png" {}
