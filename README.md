@@ -1,23 +1,18 @@
-# pomodoro-timer
-
-### This project is still in progress..
-
-![preview](/info/Screenshot_1614431067.png)
+# React Native Test App
 
 ### About
-The purpose of this project is for me (the author)
-to broaden my skillset with TypeScript, React Native,
-testing with Jest, Enzyme and Detox and get an idea
-of what the current state of platform independent
-mobile development looks like.
-Additionally this will serve as a work example of mine
-since my code is usually hidden behind an NDA.
-And in general a use of TDD, MVVM and some other practices
-and personal hackathon.
+The app is a productivity timer modeled after the _Pomodoro Technique_ and offers a stream lined UI design.
+The purpose is to evaluate and learn React Native and its dependencies in a safe, yet production like scenario.
+Additionally it serves as a personal exercise with high coverage and component modularity in mind.
 
+### As of Now
+![preview](/info/Screenshot_1614431067.png)
+
+Despite the initial and recurring struggles with the project configuration and frequent breaking changes
+of npm packages, the project is currently in a basic variant in functionality and interface with good test coverage
+all while further improvements to appearance are already queued for integration.
 
 ### Installation
-Setup the React Native CLI environment with npm
-https://reactnative.dev/docs/0.60/enviroment-setup
-and then run `cd <project root> && npm ci`
-to install all dependency packages.
+Setup the required environment according to:
+https://reactnative.dev/docs/getting-started
+and run `cd <project root> && npm install --legacy-peer-deps`
