@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { ColorValue, ViewProps, View, Image } from "react-native";
 import { Shaders, Node, GLSL } from "gl-react";
 import { parseToRgba } from 'color2k';
-import { Milliseconds } from '../TimeFormats';
 import noiseMap from '../../app/assets/noise_map.jpg'
+
 
 export default function RadialGradientBackdrop(props: GradientBackdrop.BackdropProps){
     const [values, setValues] = useState(getGradientValues(
@@ -14,16 +14,14 @@ export default function RadialGradientBackdrop(props: GradientBackdrop.BackdropP
         GradientBackdrop.getGradientTransition(props.colorInner, props.colorOuter)
     );
     const [dimen, setDimen] = useState({width:1, height:1});
-    const [animation, setAnimation] = useState(1);
     useEffect(()=>{
         setValues(getGradientValues(
             ...toRGB(transition.targetColorInner),
             ...toRGB(transition.targetColorOuter),
         ));
-        // todo: trigger animation
     }, [transition]);
     useEffect(()=>{
-    }, [values, animation]);
+    }, [values]);
 
     if(props.setGradient){
         props.setGradient.setGradient = gradient => {setTransition(gradient)}
@@ -54,29 +52,16 @@ export default function RadialGradientBackdrop(props: GradientBackdrop.BackdropP
 
 export namespace GradientBackdrop{
     export function getGradientTransition(
-        targetColorInner: ColorValue, targetColorOuter: ColorValue,
-        transitionType: GradientTransitionType = GradientTransitionType.Instant,
-        transitionDuration: Milliseconds = DefaultTransitionDuration,
-        ){
+        targetColorInner: ColorValue, targetColorOuter: ColorValue){
         return {
             targetColorInner,
             targetColorOuter,
-            transitionType,
-            transitionDuration,
         } as GradientTransition;
     }
 
     export interface GradientTransition{
         targetColorInner: ColorValue;
         targetColorOuter: ColorValue;
-        transitionType?: GradientTransitionType;
-        transitionDuration?: Milliseconds;
-    }
-
-    export enum GradientTransitionType{
-        Instant,
-        DirectFade,
-        OutInSwap,
     }
 
     export interface BackdropProps extends ViewProps {
@@ -119,10 +104,6 @@ function getGradientValues(
     }
 }
 
-function lerp(a: typeof getGradientValues, b: typeof getGradientValues){
-    // todo: impl
-}
-
 function toRGB(color: ColorValue): [number,number,number]{
     let rgb = parseToRgba(color as string);
     return [rgb[0]/255., rgb[1]/255., rgb[2]/255.];
@@ -160,9 +141,6 @@ const shaders = Shaders.create({
     }
 });
 
-const DefaultTransitionDuration: Milliseconds = 333;
 const DefaultGradientPosX = 0.5;
 const DefaultGradientPosY = -0.4;
-const LoweredGradientPosY = -0.6;
 const DefaultGradientRadius = 1.8;
-const LoweredGradientRadius = 0.8;

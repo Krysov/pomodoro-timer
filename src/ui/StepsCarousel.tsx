@@ -1,290 +1,81 @@
-import React, { Component, ReactElement } from 'react';
-import { ViewProps, ScrollView, ScrollViewProps } from "react-native";
-import Animated, { call } from 'react-native-reanimated';
-import { interval, Subscription } from 'rxjs';
-import { Milliseconds } from '../TimeFormats';
+import React, { ReactElement, useEffect, useRef, useState } from 'react';
+import { ViewProps, ScrollView } from "react-native";
 
-export enum CarouselState{
-    isGoing,
-    isFinishing,
-    isFinishingByUser,
-    isResetting,
-}
+export const StepsCarousel = (props: StepsCarouselProps) => {
+    const adapter = props.adapter;
+    const scrollView = useRef<ScrollView|null>(null);
 
-export default class StepsCarousel extends Component<StepsCarouselProps>{
+    const [width, setWidth] = useState(props.style?.width ?? 0);
+    const [offsetX, setOffsetX] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+    const [keyLeft, setKeyLeft] = useState(adapter.onFetchKeyCurrent?.());
+    const [keyRight, setKeyRight] = useState(adapter.onFetchKeyFollowing?.());
     
-    private _scrollView?: ScrollView|null
-    private _currentOffset?: number|undefined
-    private _updateSubscription?: Subscription
-    private _isDragging = false;
-    // private _stepProgress = 0
+    useEffect(()=>{
+        if(!isDragging) scrollView.current?.scrollTo(
+            {x: offsetX * width, animated: false});
+    }, [width, offsetX, keyLeft, keyRight, isDragging]);
+    useEffect(()=>{
+        setIsDragging(false);
+    }, [keyLeft, keyRight]);
 
-    private _carouselState = CarouselState.isGoing
+    adapter.onUpdate = () => {
+        setOffsetX(adapter.onFetchProgress?.() ?? 0);
+        setKeyLeft(adapter.onFetchKeyCurrent?.());
+        setKeyRight(adapter.onFetchKeyFollowing?.());
+    };
 
-    constructor(props: StepsCarouselProps) {
-        super(props);
-        this.state = { width: 0 };
-        // this.setCarouselState(CarouselState.isGoing)
+    let isTriggeringMoveNext = (withOffsetX: number)=>{
+        return (withOffsetX / 0.75) >= width;
     }
-
-    // private _blockUpdate = false;
-
-    // private _needsStepsUpdate = false;
-
-    updateSteps(){
-        // this.setStepProgress(0, false)
-
-        // this._scrollView?.shouldComponentUpdate?.call(this, this.props, this.state, this.context)
-        //  this.setState({}, ()=>this.setStepProgress(0))
-
-        
-        // this._blockUpdate = true
-        // this._currentOffset = 0
-        // this._scrollView?.scrollTo({x:0, animated: false})
-        // this.setState({}, () => this._blockUpdate = false)
-
-
-        // this._needsStepsUpdate = true
-
-        this.setCarouselState(CarouselState.isFinishing)
-    }
-
-    // setSteps(steps: Step[]){
-    //     const idCollisionCheck = new Set()
-    //     steps.forEach(step => idCollisionCheck.add(step.id));
-    //     if(idCollisionCheck.size !== steps.length)
-    //         throw 'id collision detected in provided Steps'
-        
-    // }
-
-    // setStepProgress(progress: number, smoothed: boolean = true){
-    //     // if( this._blockUpdate ) return
-
-    //     // if( this._isBlockingProgressUpdateUntilRender ) return
-    //     // const width = this.getState().width
-    //     // if( width === 0 || this._isDragging ) return
-    //     // const offsetX = progress * width
-
-    //     // Animated.loop()
-
-    //     // const targetOffset = progress * width
-    //     // const currentOffset = this._currentOffset ?? 0
-    //     // const offset = smoothed
-    //     //     ? currentOffset + (targetOffset - currentOffset) * 0.1
-    //     //     : targetOffset
-    //     // this._currentOffset = offset;
-    //     // console.log(currentOffset)
-
-    //     // this._scrollView?.scrollTo({x:offset, animated: false})
-    //     // this._isScrollAnimating = true;
-    //     // if( currentOffset >= width ) this.props.onTriggeredNextStep?.call(this, this)
-
-    //     this._stepProgress = progress
-    // }
-
-    // onUpdate(progress: number){
-    //     const width = this.getState().width
-    //     if( width === 0 || this._isDragging ) return
-    //     const offsetX = progress * width
-    //     this._scrollView?.scrollTo({x:offsetX, animated: true})
-    //     // this._isScrollAnimating = true;
-    //     if(offsetX >= width) this.onNext()
-    // }
-
     
-
-    componentDidMount(){
-        const updateInterval = 33.333 // 30fps
-        this._updateSubscription?.unsubscribe();
-        this._updateSubscription = interval(updateInterval)
-            .subscribe(() => this.onUpdate(updateInterval));
-        console.log('mount');
-    }
-
-    componentWillUnmount(){
-        this._updateSubscription?.unsubscribe();
-        this._updateSubscription = undefined;
-    }
-
-    private onUpdate(timeDelta: Milliseconds){
-        const smoothingFactor = 0.009 // magic value adjusted for time delta which feels nice
-        const width = this.getState().width
-        if( width === 0 || this._isDragging ) return
-        const targetOffset = this.getTargetOffset()
-        const currentOffset = this._currentOffset ?? 0
-        const offset = this._carouselState === CarouselState.isGoing
-            ? currentOffset + (targetOffset - currentOffset) * timeDelta * smoothingFactor
-            : targetOffset
-        this._scrollView?.scrollTo({x:offset, animated: false})
-        const threshold = 20
-
-        if( this._carouselState !== CarouselState.isResetting && offset >= width - threshold ){
-            this.setCarouselState( CarouselState.isResetting )
-            console.log(this._carouselState.toString());
-        }else if( this._carouselState === CarouselState.isResetting && offset <= threshold ){
-            this.setCarouselState( CarouselState.isGoing )
-            this.setState({})
-            console.log(this._carouselState.toString());
-        }
-    }
-
-    private getTargetOffset(): number{
-        switch(this._carouselState){
-            case CarouselState.isGoing:
-                const progress = this.props.adapter.getStepProgress()
-                return progress * this.getState().width
-
-            case CarouselState.isFinishing:
-            case CarouselState.isFinishingByUser:
-                return this.getState().width
-
-            case CarouselState.isResetting:
-                return 0
-        }
-    }
-
-    private getState(): State{
-        return this.state as State;
-    }
-
-    private setCarouselState(state: CarouselState){
-        //     switch(state){
-        //         case CarouselState.isGoing:
-        //             break;
-        //         case CarouselState.isFinishing:
-        //             break;
-        //         case CarouselState.isResetting:
-        //             break;
-        //     }
-        this._carouselState = state
-    }
-
-    private triggerNext(){
-        this.props.onTriggeredNextStep?.call(this, this)
-    }
-
-    render(){
-        // this._isBlockingProgressUpdateUntilRender = false
-        // this._scrollView?.scrollTo({x:0, animated: false})
-        // this.setStepProgress(this.props.adapter.getStepProgress())
-        return <ScrollView
+    return <ScrollView
+        testID={'idCarousellScroll'}
         horizontal={true}
-        style={[this.props.style]}
+        style={props.style}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={true}
         pagingEnabled={false}
-        // scrollEventThrottle={120}
-        // onScroll={event => {
-        //     this._currentOffset = event.nativeEvent.contentOffset.x
-        // }}
-        ref={view => this._scrollView = view}
-        // reference={view => this._scrollView = view}
-        onScrollBeginDrag={(event)=>{
-            this._isDragging = true;
-            // this._scrollView?.setNativeProps({pagingEnabled: true})
+        ref={scrollView}
+        onScrollBeginDrag={() => setIsDragging(true)}
+        onScrollEndDrag={event => {
+            setIsDragging(false);
+            if(isTriggeringMoveNext(event.nativeEvent.contentOffset.x))
+                adapter.onUserMovedNext?.(keyLeft, keyRight);
         }}
-        onScrollEndDrag={(event)=>{
-            this._isDragging = false;
-        }}
-        // onScrollAnimationEnd={()=>{
-        //     // this._isScrollAnimating = false;
-        // }}
-        // onMomentumScrollEnd={(event)=>{
-        //     // if(this.state.width === 0 || this._isDragging || this._isScrollAnimating) return
-        //     if(event.nativeEvent.contentOffset.x >= this.state.width) this.onNext()
-        //     this._scrollView?.setNativeProps({pagingEnabled: false})
-        //     this._scrollView?.scrollTo({x:0, animated: false})
-        // }}
-        // onLayout={event => this.setState({width: event.nativeEvent.layout.width})}
-        >
-            {this.props.adapter.getCurrentStepView(this.getState().width)}
-            {this.props.adapter.getNextStepView(this.getState().width)}
-        </ScrollView>
-    }
-}
-
-// class RefScrollView extends ScrollView{
-//     readonly _ref:(ref: RefScrollViewProps) => void
-//     constructor(props: RefScrollViewProps){
-//         super(props);
-//         this._ref = props.reference
-//     }
-//     componentDidMount(){
-//         this._ref?.call(this, this)
-//     }
-// }
-
-// interface RefScrollViewProps extends ScrollViewProps{
-//     reference: (ref: ScrollView) => void;
-// }
-
-
-
-// export default function StepsCarousel(props: StepsCarouselProps){
-//     const [width, setWidth] = useState(0)
-//     let _scrollView:ScrollView|undefined;
-//     var _isDragging = false;
-
-//     function updateSteps(){
-//         setState({})
-//         setStepProgress(0)
-//     }
-
-//     function setStepProgress(progress: number){
-//         if( width === 0 || _isDragging ) return
-//         const offsetX = progress * width
-//         _scrollView?.scrollTo({x:offsetX, animated: false})
-//         if( offsetX >= width ) props.onTriggeredNextStep?.call(undefined, _scrollView)
-//     }
-    
-//     return <ScrollView
-//         horizontal={true}
-//         style={props.style}
-//         showsHorizontalScrollIndicator={false}
-//         showsVerticalScrollIndicator={false}
-//         scrollEnabled={true}
-//         pagingEnabled={false}
-//         onScroll={()=>{
-//             if(this._test){
-//                 this.setState({})
-//                 this._test = false
-//             }
-//         }}
-//         ref={view => this._scrollView = view}
-//         onScrollBeginDrag={(event)=>{
-//             this._isDragging = true;
-//         }}
-//         onScrollEndDrag={(event)=>{
-//             this._isDragging = false;
-//         }}
-//         onLayout={event => setWidth(event.nativeEvent.layout.width)}
-//         >
-//             {props.adapter.getCurrentStepView(width)}
-//             {props.adapter.getNextStepView(width)}
-//     </ScrollView>
-// }
-
-
-
-export interface StepsCarouselAdapter{
-    getCurrentStepView: (expectedWidth: number) => ReactElement
-    getNextStepView: (expectedWidth: number) => ReactElement
-    getStepProgress: () => number
-}
+        onLayout={event => setWidth(event.nativeEvent.layout.width)}>
+            {adapter.getViewCurrent?.(width)}
+            {adapter.getViewFollowing?.(width)}
+        </ScrollView>;
+};
 
 export interface StepsCarouselProps extends ViewProps{
-    adapter: StepsCarouselAdapter
-    ref?: (carousel: StepsCarousel) => void
-    onTriggeredNextStep?: (carousel: StepsCarousel) => void
+    adapter: StepsCarouselAdapter<any>;
 }
 
-export interface Step{
-    // content: Component<ViewProps>,
-    content: ReactElement
-    id: string,
-}
+export class StepsCarouselAdapter<ItemKey>{
+    onCreateView?: (key: ItemKey, width: number) => ReactElement;
+    onFetchKeyCurrent?: () => ItemKey;
+    onFetchKeyFollowing?: () => ItemKey;
+    onFetchProgress?: () => number;
+    onUserMovedNext?: (keySkipped: ItemKey, keySelected: ItemKey) => void;
+    onUpdate?: () => void;
 
-interface State{
-    width: number
+    getViewCurrent(itemWidth: number): ReactElement|undefined {
+        let key = this.onFetchKeyCurrent?.();
+        return key ? this._getItemView(key, itemWidth) : undefined;
+    }
+
+    getViewFollowing(itemWidth: number): ReactElement|undefined {
+        let key = this.onFetchKeyFollowing?.();
+        return key ? this._getItemView(key, itemWidth) : undefined;
+    }
+
+    private _getItemView(key: ItemKey, itemWidth: number): ReactElement|undefined {
+        return this.onCreateView?.(key, itemWidth);
+    }
+
+    update(){
+        this.onUpdate?.();
+    }
 }
